@@ -1,14 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
+  webpack(config) {
+    config.resolve.alias['@'] = __dirname;
+    return config;
   },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  images: {
-    unoptimized: true,
-  },
-}
+};
 
-export default nextConfig
+module.exports = nextConfig;
