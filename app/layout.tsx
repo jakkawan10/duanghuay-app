@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { Inter, Noto_Sans_Thai } from "next/font/google"
-import '../globals.css'
+import '@/globals.css'
 import { AuthProvider } from "@/lib/auth-context"
 import { Toaster } from "@/components/ui/toaster"
 import Navbar from "@/components/navbar"
