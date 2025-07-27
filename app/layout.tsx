@@ -1,9 +1,9 @@
 import type { Metadata } from "next"
 import { Inter, Noto_Sans_Thai } from "next/font/google"
-import './globals.css';
-import { AuthProvider } from "@/lib/auth-context"
-import { Toaster } from "@/components/ui/toaster"
-import Navbar from "@/components/navbar"
+import "../globals.css"
+import { AuthProvider } from "../lib/auth-context"
+import { Toaster } from "../components/ui/toaster"
+import Navbar from "../components/navbar"
 
 const inter = Inter({ subsets: ["latin"] })
 const notoSansThai = Noto_Sans_Thai({
@@ -12,8 +12,8 @@ const notoSansThai = Noto_Sans_Thai({
 })
 
 export const metadata: Metadata = {
-  title: "ดวงหวย - ระบบทำนายและวิเคราะห์เลขเด็ด",
-  description: "แอปทำนายหมายเลขวิเคราะห์เลขเด็ดด้วย AI",
+  title: "ดวงหวย - ระบบทำนายดวงและวิเคราะห์เลขเด็ด",
+  description: "แอปทำนายดวงและวิเคราะห์เลขเด็ดด้วย AI",
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
