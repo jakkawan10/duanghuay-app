@@ -16,14 +16,13 @@ export default function Step1Page() {
   }, [])
 
   return (
-    <div className="relative w-full h-screen overflow-hidden">
-      <Image
-        src="/step1-bg.jpg"
-        alt="bg"
-        fill
-        className="object-cover"
-        priority
-      />
+    <div
+  className="w-full h-screen bg-cover bg-center bg-no-repeat"
+  style={{ backgroundImage: "url('/step1-bg.jpg')" }}
+>
+  {/* เนื้อหาภายใน */}
+
+
 
       {/* เอฟเฟกต์ควันหมุน */}
       <img
