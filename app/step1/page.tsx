@@ -1,9 +1,9 @@
 'use client'
-import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { useEffect, useRef } from 'react'
 
-export default function Step3Page() {
+export default function Step1Page() {
   const router = useRouter()
   const audioRef = useRef<HTMLAudioElement>(null)
 
@@ -11,33 +11,33 @@ export default function Step3Page() {
     const audio = audioRef.current
     if (audio) {
       audio.volume = 0.4
-      audio.play().catch(() => {})
+      audio.play().catch(() => {}) // เผื่อ autoplay ถูกบล็อก
     }
   }, [])
 
   return (
     <div className="relative w-full h-screen overflow-hidden">
       <Image
-        src="/step3-bg.jpg"
+        src="/step1-bg.jpg"
         alt="bg"
         fill
         className="object-cover"
         priority
       />
 
-      {/* ควันหมุน */}
+      {/* เอฟเฟกต์ควันหมุน */}
       <img
         src="/effects/smoke-center.gif"
         alt="smoke"
         className="absolute left-1/2 top-1/2 w-[120px] -translate-x-1/2 -translate-y-1/2"
       />
 
-      {/* ปุ่มกลับ */}
+      {/* ปุ่มเริ่มการอธิษฐาน */}
       <button
-        onClick={() => router.push('/step1')}
-        className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-white/80 text-black px-6 py-3 rounded-xl shadow-xl hover:scale-105 transition"
+        onClick={() => router.push('/step2')}
+        className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-yellow-400 text-black px-6 py-3 rounded-xl shadow-xl hover:scale-105 transition"
       >
-        กลับสู่หน้าแรก
+        เริ่มการอธิษฐาน
       </button>
 
       {/* เสียง */}
