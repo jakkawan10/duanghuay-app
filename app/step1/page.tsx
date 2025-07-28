@@ -10,25 +10,24 @@ export default function Step1Page() {
   };
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden">
-      {/* Fullscreen Video */}
-      <video
-        className="absolute top-0 left-0 w-full h-full object-cover"
-        src="/videostep1.mp4"
-        autoPlay
-        loop
-        muted
-        playsInline
-      />
-
-      {/* Overlay Button */}
-      <div className="absolute bottom-10 w-full flex justify-center">
-        <button
-          onClick={handleClick}
-          className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-2 px-6 rounded-lg shadow-md transition"
-        >
-          เตรียมการอธิษฐาน
-        </button>
+    <div className="w-screen h-screen flex flex-col items-center justify-center bg-black">
+      <div className="max-w-[450px] w-full aspect-[3/4] relative">
+        <video
+          className="w-full h-full object-cover rounded-xl shadow-xl"
+          src="/videostep1.mp4"
+          autoPlay
+          muted
+          loop
+          playsInline
+        />
+        <div className="absolute bottom-4 w-full flex justify-center">
+          <button
+            onClick={handleClick}
+            className="bg-gradient-to-r from-yellow-300 to-yellow-500 text-black font-bold py-3 px-10 rounded-xl shadow-lg text-xl hover:scale-105 transition"
+          >
+            เตรียมคำอธิษฐาน
+          </button>
+        </div>
       </div>
     </div>
   );
