@@ -1,32 +1,31 @@
-// app/step1/page.tsx
-"use client";
+'use client'
 
-import { useEffect } from "react";
+import { useRouter } from 'next/navigation'
 
-export default function Step1Page() {
-  useEffect(() => {
-    const audio = new Audio("/sound-temple.mp3");
-    audio.loop = true;
-    audio.play().catch((e) => {
-      console.log("Autoplay error:", e);
-    });
-  }, []);
+export default function Step1() {
+  const router = useRouter()
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden">
-      {/* พื้นหลัง */}
-      <img
-        src="/step1-bg.jpg"
-        alt="background"
+    <div className="relative w-full h-screen overflow-hidden bg-black">
+      {/* วิดีโอเต็มจอ */}
+      <video
+        src="/videostep1.mp4"
+        autoPlay
+        loop
+        playsInline
+        controls={false}
         className="absolute inset-0 w-full h-full object-cover"
       />
 
-      {/* เอฟเฟคควันหมุน */}
-      <img
-        src="/smoke-center.gif"
-        alt="smoke"
-        className="absolute left-1/2 top-1/2 transform -translate-x-1/2 translate-y-12 scale-150 pointer-events-none"
-      />
+      {/* ปุ่ม */}
+      <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2">
+        <button
+          onClick={() => router.push('/step2')}
+          className="bg-yellow-400 text-black font-bold py-3 px-6 rounded-xl text-xl shadow-lg hover:scale-105 transition"
+        >
+          เตรียมการอธิษฐาน
+        </button>
+      </div>
     </div>
-  );
+  )
 }
