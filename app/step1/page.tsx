@@ -1,60 +1,32 @@
-'use client'
+// app/step1/page.tsx
+"use client";
 
-import { useRouter } from 'next/navigation'
-import { useEffect, useRef } from 'react'
+import { useEffect } from "react";
 
 export default function Step1Page() {
-  const router = useRouter()
-  const audioRef = useRef<HTMLAudioElement>(null)
-
   useEffect(() => {
-    const audio = audioRef.current
-    if (audio) {
-      const playAudio = () => {
-        audio.volume = 0.5
-        audio.loop = true
-        audio.muted = false
-        const promise = audio.play()
-        if (promise !== undefined) {
-          promise.catch(() => {
-            // ถ้า autoplay โดน block ให้รอ user interaction
-            document.addEventListener('click', () => {
-              audio.play().catch(() => {})
-            }, { once: true })
-          })
-        }
-      }
-
-      playAudio()
-    }
-  }, [])
+    const audio = new Audio("/sound-temple.mp3");
+    audio.loop = true;
+    audio.play().catch((e) => {
+      console.log("Autoplay error:", e);
+    });
+  }, []);
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-gradient-to-br from-blue-900 to-red-900 flex items-center justify-center">
+    <div className="relative w-screen h-screen overflow-hidden">
       {/* พื้นหลัง */}
       <img
         src="/step1-bg.jpg"
         alt="background"
-        className="absolute inset-0 w-full h-full object-contain z-0"
+        className="absolute inset-0 w-full h-full object-cover"
       />
 
-      {/* เอฟเฟกต์ควัน: ขยาย 3 เท่า และเลื่อนลงนิดเดียว */}
+      {/* เอฟเฟคควันหมุน */}
       <img
-        src="/effects/smoke-center.gif"
+        src="/smoke-center.gif"
         alt="smoke"
-        className="absolute z-10 w-[1200px] top-[55%] left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+        className="absolute left-1/2 top-1/2 transform -translate-x-1/2 translate-y-12 scale-150 pointer-events-none"
       />
-
-      {/* ปุ่มเริ่มพิธี */}
-      <button
-        onClick={() => router.push('/step2')}
-        className="absolute bottom-12 left-1/2 -translate-x-1/2 px-6 py-3 bg-yellow-400 text-black font-bold text-xl rounded-xl shadow-md hover:bg-yellow-500 z-20"
-      >
-        เริ่มการอธิษฐาน
-      </button>
-
-      {/* เสียง */}
-      <audio ref={audioRef} src="/sounds/sound-temple.mp3" preload="auto" />
     </div>
-  )
+  );
 }
