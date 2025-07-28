@@ -16,18 +16,16 @@ export default function Step1Page() {
         audio.muted = false
         const promise = audio.play()
         if (promise !== undefined) {
-          promise.catch((err) => {
-            console.log('Autoplay blocked:', err)
+          promise.catch(() => {
+            // ถ้า autoplay โดน block ให้รอ user interaction
+            document.addEventListener('click', () => {
+              audio.play().catch(() => {})
+            }, { once: true })
           })
         }
-        document.removeEventListener('click', playAudio)
       }
 
-      // เล่นทันที
       playAudio()
-
-      // ถ้า autoplay โดนบล็อก ให้เล่นเมื่อผู้ใช้คลิก
-      document.addEventListener('click', playAudio)
     }
   }, [])
 
@@ -40,14 +38,14 @@ export default function Step1Page() {
         className="absolute inset-0 w-full h-full object-contain z-0"
       />
 
-      {/* เอฟเฟกต์ควัน (ใหญ่เท่าบริเวณวงกลมแดงที่วงไว้) */}
+      {/* เอฟเฟกต์ควัน: ขยาย 3 เท่า และเลื่อนลงนิดเดียว */}
       <img
         src="/effects/smoke-center.gif"
         alt="smoke"
-        className="absolute z-10 w-[400px] top-[47%] left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+        className="absolute z-10 w-[1200px] top-[55%] left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
       />
 
-      {/* ปุ่ม */}
+      {/* ปุ่มเริ่มพิธี */}
       <button
         onClick={() => router.push('/step2')}
         className="absolute bottom-12 left-1/2 -translate-x-1/2 px-6 py-3 bg-yellow-400 text-black font-bold text-xl rounded-xl shadow-md hover:bg-yellow-500 z-20"
