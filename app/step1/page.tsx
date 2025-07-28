@@ -17,7 +17,7 @@ export default function Step1Page() {
 
   return (
     <div
-  className="w-full h-screen bg-cover bg-center bg-no-repeat"
+  className="w-full h-screen bg-no-repeat bg-center bg-cover"
   style={{ backgroundImage: "url('/step1-bg.jpg')" }}
 >
   {/* เนื้อหาภายใน */}
