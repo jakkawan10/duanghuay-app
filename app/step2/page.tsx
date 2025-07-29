@@ -11,48 +11,52 @@ export default function Step2Page() {
     <div className="w-screen h-screen flex items-center justify-center bg-black">
       <div className="relative w-full max-w-[450px] aspect-[3/4] overflow-hidden rounded-xl shadow-xl">
 
-        {/* พื้นหลัง */}
+        {/* ภาพพื้นหลังพระพุทธรูป */}
         <img
           src="/step2-bg.jpg"
           className="w-full h-full object-cover"
           alt="พิธีกรรม"
         />
 
-        {/* 🔥 ปลายเทียนซ้าย */}
+        {/* ✅ พื้นที่คลิก: เทียนซ้าย */}
         <div
-          className="absolute top-[58%] left-[16%] w-[40px] h-[40px] cursor-pointer"
           onClick={() => setFlameLeft(true)}
-        ></div>
+          className="absolute top-[57.5%] left-[12%] w-[60px] h-[100px] cursor-pointer"
+        />
 
-        {/* 🔥 ปลายเทียนขวา */}
+        {/* ✅ พื้นที่คลิก: เทียนขวา */}
         <div
-          className="absolute top-[58%] right-[16%] w-[40px] h-[40px] cursor-pointer"
           onClick={() => setFlameRight(true)}
-        ></div>
+          className="absolute top-[57.5%] right-[12%] w-[60px] h-[100px] cursor-pointer"
+        />
 
-        {/* 🪔 ธูปตรงกลาง */}
+        {/* ✅ พื้นที่คลิก: กระถางธูปกลาง */}
         <div
-          className="absolute top-[57%] left-1/2 transform -translate-x-1/2 w-[60px] h-[60px] cursor-pointer"
           onClick={() => setIncense(true)}
-        ></div>
+          className="absolute top-[52%] left-1/2 transform -translate-x-1/2 w-[100px] h-[100px] cursor-pointer"
+        />
 
-        {/* 🌟 เอฟเฟกต์ GIF แสดงเมื่อถูกแตะ */}
+        {/* 🔥 เอฟเฟกต์: เทียนซ้าย */}
         {flameLeft && (
           <img
             src="/effects/flame.gif"
-            className="absolute top-[58%] left-[16%] w-[40px] h-[40px] pointer-events-none"
+            className="absolute top-[57.5%] left-[12%] w-[60px] h-[100px] pointer-events-none"
           />
         )}
+
+        {/* 🔥 เอฟเฟกต์: เทียนขวา */}
         {flameRight && (
           <img
             src="/effects/flame.gif"
-            className="absolute top-[58%] right-[16%] w-[40px] h-[40px] pointer-events-none"
+            className="absolute top-[57.5%] right-[12%] w-[60px] h-[100px] pointer-events-none"
           />
         )}
+
+        {/* 🪔 เอฟเฟกต์: ควันธูป */}
         {incense && (
           <img
             src="/effects/incense.gif"
-            className="absolute top-[57%] left-1/2 transform -translate-x-1/2 w-[60px] h-[60px] pointer-events-none"
+            className="absolute top-[52%] left-1/2 transform -translate-x-1/2 w-[100px] h-[100px] pointer-events-none"
           />
         )}
       </div>
