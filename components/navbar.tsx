@@ -48,13 +48,13 @@ export default function Navbar() {
     }
   }
 
-  // Don't show navbar on landing page
-  if (pathname === "/") {
-    return null
-  }
-
-  // Don't show navbar on auth pages
-  if (pathname === "/login" || pathname === "/register") {
+  // ❌ ซ่อน Navbar ในหน้า Landing, Login, Register, และ Step1–3
+  if (
+    pathname === "/" ||
+    pathname === "/login" ||
+    pathname === "/register" ||
+    pathname.startsWith("/step")
+  ) {
     return null
   }
 
