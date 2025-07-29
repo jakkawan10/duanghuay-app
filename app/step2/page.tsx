@@ -1,61 +1,52 @@
-'use client'
-import { useState } from 'react'
-import Image from 'next/image'
+'use client';
+
+import { useState } from 'react';
 
 export default function Step2Page() {
-  const [showFlames, setShowFlames] = useState(false)
-  const [showIncense, setShowIncense] = useState(false)
+  const [showFlameLeft, setShowFlameLeft] = useState(false);
+  const [showIncense, setShowIncense] = useState(false);
 
   return (
-    <div className="relative w-full h-screen">
-      <Image
-        src="/step2-bg.jpg"
-        alt="bg"
-        fill
-        className="object-cover"
-        priority
-      />
+    <div className="w-screen h-screen flex items-center justify-center bg-black">
+      <div className="relative w-full max-w-[450px] aspect-[3/4] overflow-hidden rounded-xl shadow-xl">
 
-      {/* ปุ่มจิ้มเทียน */}
-      <button
-        onClick={() => setShowFlames(true)}
-        className="absolute left-[22%] bottom-[32%] w-[20%] h-[15%]"
-      />
-      <button
-        onClick={() => setShowFlames(true)}
-        className="absolute right-[22%] bottom-[32%] w-[20%] h-[15%]"
-      />
-
-      {/* ปุ่มจิ้มกระถางธูป */}
-      <button
-        onClick={() => setShowIncense(true)}
-        className="absolute left-[42%] bottom-[28%] w-[16%] h-[15%]"
-      />
-
-      {/* เอฟเฟกต์ไฟเทียน */}
-      {showFlames && (
-        <>
-          <img
-            src="/effects/flame.gif"
-            alt="flame-left"
-            className="absolute left-[24%] bottom-[32%] w-[32px]"
-          />
-          <img
-            src="/effects/flame.gif"
-            alt="flame-right"
-            className="absolute right-[24%] bottom-[32%] w-[32px]"
-          />
-        </>
-      )}
-
-      {/* เอฟเฟกต์ธูป */}
-      {showIncense && (
+        {/* 🖼️ พื้นหลังพระ */}
         <img
-          src="/effects/incense.gif"
-          alt="incense"
-          className="absolute left-[45%] bottom-[28%] w-[60px]"
+          src="/step2-bg.jpg"
+          className="w-full h-full object-cover"
+          alt=""
         />
-      )}
+
+        {/* 🪔 โซนกดธูป */}
+        <div
+          onClick={() => setShowIncense(true)}
+          className="absolute top-[44%] left-1/2 w-[70px] h-[70px] -translate-x-1/2 cursor-pointer"
+        />
+
+        {/* 🔥 โซนกดเทียนซ้าย */}
+        <div
+          onClick={() => setShowFlameLeft(true)}
+          className="absolute top-[63%] left-[23%] w-[45px] h-[80px] cursor-pointer"
+        />
+
+        {/* ✅ เอฟเฟกต์ควันธูป */}
+        {showIncense && (
+          <img
+            src="/effects/incense.gif"
+            className="absolute top-0 left-0 w-full h-full object-cover pointer-events-none"
+            alt="incense"
+          />
+        )}
+
+        {/* ✅ เอฟเฟกต์เทียนซ้าย */}
+        {showFlameLeft && (
+          <img
+            src="/effects/flame.gif"
+            className="absolute top-0 left-0 w-full h-full object-cover pointer-events-none"
+            alt="flame"
+          />
+        )}
+      </div>
     </div>
-  )
+  );
 }
