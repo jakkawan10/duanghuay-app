@@ -6,27 +6,25 @@ export default function Step2Page() {
   const [showFlameLeft, setShowFlameLeft] = useState(false);
   const [showFlameRight, setShowFlameRight] = useState(false);
   const [showIncense, setShowIncense] = useState(false);
+  const [canShowPrayButton, setCanShowPrayButton] = useState(false);
   const [showPrayText, setShowPrayText] = useState(false);
-  const [showDoneButton, setShowDoneButton] = useState(false);
-
-  const isAllLit = showFlameLeft && showFlameRight && showIncense;
 
   useEffect(() => {
-    if (isAllLit) {
+    if (showFlameLeft && showFlameRight && showIncense) {
       setShowPrayText(true);
       const timer = setTimeout(() => {
-        setShowDoneButton(true);
-      }, 10000); // 10 วินาที
-
+        setCanShowPrayButton(true);
+        setShowPrayText(false);
+      }, 10000);
       return () => clearTimeout(timer);
     }
-  }, [isAllLit]);
+  }, [showFlameLeft, showFlameRight, showIncense]);
 
   return (
-    <div className="w-screen h-screen flex items-center justify-center bg-[#1b0c07]">
+    <div className="w-screen h-screen flex items-center justify-center bg-[#2a1e14]">
       <div className="relative w-full max-w-[450px] aspect-[3/4] overflow-hidden rounded-xl shadow-xl">
 
-        {/* 🎥 วิดีโอพื้นหลัง + เสียง */}
+        {/* 🎥 พื้นหลังวิดีโอ */}
         <video
           src="/videostep2.mp4"
           autoPlay
@@ -36,25 +34,25 @@ export default function Step2Page() {
           className="absolute top-0 left-0 w-full h-full object-cover"
         />
 
-        {/* 🪔 โซนกดธูป */}
+        {/* 🪔 กดธูป */}
         <div
           onClick={() => setShowIncense(true)}
           className="absolute top-[44%] left-1/2 w-[70px] h-[70px] -translate-x-1/2 cursor-pointer"
         />
 
-        {/* 🔥 โซนกดเทียนซ้าย */}
+        {/* 🔥 กดเทียนซ้าย */}
         <div
           onClick={() => setShowFlameLeft(true)}
           className="absolute top-[63%] left-[23%] w-[45px] h-[80px] cursor-pointer"
         />
 
-        {/* 🔥 โซนกดเทียนขวา */}
+        {/* 🔥 กดเทียนขวา */}
         <div
           onClick={() => setShowFlameRight(true)}
-          className="absolute top-[63%] left-[77%] w-[45px] h-[80px] cursor-pointer"
+          className="absolute top-[63%] right-[23%] w-[45px] h-[80px] cursor-pointer"
         />
 
-        {/* ✅ เอฟเฟกต์ควันธูป */}
+        {/* ✅ เอฟเฟกต์ธูป */}
         {showIncense && (
           <img
             src="/effects/incense.gif"
@@ -81,27 +79,25 @@ export default function Step2Page() {
           />
         )}
 
-        {/* ✨ ข้อความกระพริบ */}
-        {!isAllLit && (
-          <div className="absolute top-[8%] left-1/2 -translate-x-1/2 text-white text-lg animate-pulse">
+        {/* ✨ ข้อความแนะนำเริ่มต้น */}
+        {!canShowPrayButton && !showPrayText && (
+          <div className="absolute top-5 left-1/2 -translate-x-1/2 text-white text-sm animate-pulse bg-black/40 px-4 py-1 rounded-full">
             คลิกจุดเทียน จุดธูป เพื่อเริ่มพิธี
           </div>
         )}
 
-        {/* 🙏 ข้อความอธิษฐาน */}
-        {showPrayText && !showDoneButton && (
-          <div className="absolute top-[8%] left-1/2 -translate-x-1/2 text-yellow-300 text-xl animate-pulse">
-            🙏 กรุณาอธิษฐาน
+        {/* 🧘‍♀️ ข้อความให้อธิษฐาน */}
+        {showPrayText && (
+          <div className="absolute top-5 left-1/2 -translate-x-1/2 text-yellow-300 text-base font-semibold animate-pulse bg-black/50 px-6 py-2 rounded-xl">
+            ตั้งจิตอธิษฐาน...
           </div>
         )}
 
-        {/* ✅ ปุ่ม "อธิษฐานเสร็จแล้ว" */}
-        {showDoneButton && (
+        {/* 🙏 ปุ่มอธิษฐานเสร็จแล้ว */}
+        {canShowPrayButton && (
           <button
-            className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-2 px-4 rounded-xl shadow-xl transition"
-            onClick={() => {
-              window.location.href = '/step3';
-            }}
+            onClick={() => window.location.href = '/step3'}
+            className="absolute bottom-5 left-1/2 -translate-x-1/2 bg-yellow-500 text-black font-bold py-2 px-6 rounded-full shadow-xl hover:bg-yellow-400"
           >
             อธิษฐานเสร็จแล้ว
           </button>
