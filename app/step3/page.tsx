@@ -1,47 +1,49 @@
-'use client'
-import Image from 'next/image'
-import { useRouter } from 'next/navigation'
-import { useEffect, useRef } from 'react'
+// app/step3/page.tsx
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function Step3Page() {
-  const router = useRouter()
-  const audioRef = useRef<HTMLAudioElement>(null)
+  const router = useRouter();
+  const [showButton, setShowButton] = useState(false);
 
   useEffect(() => {
-    const audio = audioRef.current
-    if (audio) {
-      audio.volume = 0.4
-      audio.play().catch(() => {})
-    }
-  }, [])
+    const timer = setTimeout(() => setShowButton(true), 4000);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
-    <div className="relative w-full h-screen overflow-hidden">
-      <Image
-        src="/step3-bg.jpg"
-        alt="bg"
-        fill
-        className="object-cover"
-        priority
-      />
+    <div className="relative w-full h-screen bg-black text-white overflow-hidden flex flex-col items-center justify-center">
+      <div className="absolute top-0 left-0 w-full h-full">
+        <img
+          src="/step3-bg.jpg"
+          alt="background"
+          className="object-cover w-full h-full opacity-90"
+        />
+      </div>
 
-      {/* ควันหมุน */}
-      <img
-        src="/effects/smoke-center.gif"
-        alt="smoke"
-        className="absolute left-1/2 top-1/2 w-[120px] -translate-x-1/2 -translate-y-1/2"
-      />
+      <div className="relative z-10 text-center p-6 animate-pulse">
+        <h1 className="text-3xl md:text-5xl font-bold drop-shadow-lg">
+          ดวงดีรับทรัพย์ทุกงวด!
+        </h1>
+        <p className="text-xl mt-4 text-yellow-300 animate-bounce">
+          ตัวเลขมันขึ้นอยู่กับดวงคุณ
+        </p>
+      </div>
 
-      {/* ปุ่มกลับ */}
-      <button
-        onClick={() => router.push('/step1')}
-        className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-white/80 text-black px-6 py-3 rounded-xl shadow-xl hover:scale-105 transition"
-      >
-        กลับสู่หน้าแรก
-      </button>
+      {showButton && (
+        <button
+          onClick={() => router.push("/home")}
+          className="relative z-10 mt-10 bg-yellow-400 hover:bg-yellow-500 text-black text-xl font-bold py-3 px-6 rounded-full shadow-lg animate-fade-in"
+        >
+          🔮 เปิดดวงเลขเด็ด
+        </button>
+      )}
 
-      {/* เสียง */}
-      <audio ref={audioRef} src="/sound-temple.mp3" loop />
+      <audio autoPlay loop>
+        <source src="/sound-temple.mp3" type="audio/mpeg" />
+      </audio>
     </div>
-  )
+  );
 }
