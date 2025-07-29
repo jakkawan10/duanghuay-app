@@ -13,13 +13,13 @@ export default function Step1Page() {
     <div className="w-screen h-screen flex flex-col items-center justify-center bg-black">
       <div className="max-w-[450px] w-full aspect-[3/4] relative">
         <video
-          className="w-full h-full object-cover rounded-xl shadow-xl"
-          src="/videostep1.mp4"
-          autoPlay
-          muted
-          loop
-          playsInline
-        />
+  className="w-full h-full object-cover rounded-xl shadow-xl"
+  src="/videostep1.mp4"
+  autoPlay
+  loop
+  playsInline
+  controls={false}
+/>
         <div className="absolute bottom-4 w-full flex justify-center">
           <button
             onClick={handleClick}
