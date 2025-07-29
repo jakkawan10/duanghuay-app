@@ -2,48 +2,44 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { FaRegLightbulb } from "react-icons/fa";
+import Image from "next/image";
 
-export default function Step3Page() {
+export default function Step3() {
   const router = useRouter();
-  const [showButton, setShowButton] = useState(false);
 
-  useEffect(() => {
-    const timer = setTimeout(() => setShowButton(true), 4000);
-    return () => clearTimeout(timer);
-  }, []);
+  const handleClick = () => {
+    router.push("/home");
+  };
 
   return (
-    <div className="relative w-full h-screen bg-black text-white overflow-hidden flex flex-col items-center justify-center">
-      <div className="absolute top-0 left-0 w-full h-full">
-        <img
-          src="/step3-bg.jpg"
-          alt="background"
-          className="object-cover w-full h-full opacity-90"
-        />
-      </div>
-
-      <div className="relative z-10 text-center p-6 animate-pulse">
-        <h1 className="text-3xl md:text-5xl font-bold drop-shadow-lg">
+    <div className="relative w-screen h-screen">
+      <Image
+        src="/step3-bg.jpg"
+        alt="Background"
+        fill
+        className="object-cover"
+        priority
+      />
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-4">
+        <h1 className="text-4xl md:text-5xl font-bold mb-3 drop-shadow-lg">
           ดวงดีรับทรัพย์ทุกงวด!
         </h1>
-        <p className="text-xl mt-4 text-yellow-300 animate-bounce">
-          ตัวเลขมันขึ้นอยู่กับดวงคุณ
+        <p className="text-lg md:text-xl mb-1 drop-shadow-md">
+          ตัวเลขขึ้นอยู่กับดวงคุณ
         </p>
-      </div>
-
-      {showButton && (
-        <button
-          onClick={() => router.push("/home")}
-          className="relative z-10 mt-10 bg-yellow-400 hover:bg-yellow-500 text-black text-xl font-bold py-3 px-6 rounded-full shadow-lg animate-fade-in"
+        <p className="text-sm md:text-base mb-6 drop-shadow-sm">
+          โปรดเช็คดวงของคุณก่อนเข้าสู่ระบบวิเคราะห์เลขเด็ด
+        </p>
+        <Button
+          onClick={handleClick}
+          className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold rounded-full px-6 py-3 flex items-center gap-2 text-lg shadow-xl"
         >
-          🔮 เปิดดวงเลขเด็ด
-        </button>
-      )}
-
-      <audio autoPlay loop>
-        <source src="/sound-temple.mp3" type="audio/mpeg" />
-      </audio>
+          <FaRegLightbulb className="text-xl" />
+          เปิดดวงเลขเด็ด
+        </Button>
+      </div>
     </div>
   );
 }
