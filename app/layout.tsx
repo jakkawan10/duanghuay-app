@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import Navbar from '@/components/Navbar'; // หรือเปลี่ยนเป็น path Navbar ที่คุณใช้
+import Navbar from '@/components/navbar'; // หรือเปลี่ยนเป็น path Navbar ที่คุณใช้
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
