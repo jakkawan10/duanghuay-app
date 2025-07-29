@@ -1,21 +1,32 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 
 export default function Step2Page() {
-  const router = useRouter();
   const [showFlameLeft, setShowFlameLeft] = useState(false);
   const [showFlameRight, setShowFlameRight] = useState(false);
   const [showIncense, setShowIncense] = useState(false);
+  const [showPrayText, setShowPrayText] = useState(false);
+  const [showDoneButton, setShowDoneButton] = useState(false);
 
-  const isReady = showFlameLeft && showFlameRight && showIncense;
+  const isAllLit = showFlameLeft && showFlameRight && showIncense;
+
+  useEffect(() => {
+    if (isAllLit) {
+      setShowPrayText(true);
+      const timer = setTimeout(() => {
+        setShowDoneButton(true);
+      }, 10000); // 10 วินาที
+
+      return () => clearTimeout(timer);
+    }
+  }, [isAllLit]);
 
   return (
-    <div className="w-screen h-screen flex items-center justify-center bg-black">
+    <div className="w-screen h-screen flex items-center justify-center bg-[#1b0c07]">
       <div className="relative w-full max-w-[450px] aspect-[3/4] overflow-hidden rounded-xl shadow-xl">
 
-        {/* 🎥 พื้นหลังวิดีโอ (พร้อมเสียง) */}
+        {/* 🎥 วิดีโอพื้นหลัง + เสียง */}
         <video
           src="/videostep2.mp4"
           autoPlay
@@ -40,7 +51,7 @@ export default function Step2Page() {
         {/* 🔥 โซนกดเทียนขวา */}
         <div
           onClick={() => setShowFlameRight(true)}
-          className="absolute top-[63%] right-[23%] w-[45px] h-[80px] cursor-pointer"
+          className="absolute top-[63%] left-[77%] w-[45px] h-[80px] cursor-pointer"
         />
 
         {/* ✅ เอฟเฟกต์ควันธูป */}
@@ -70,11 +81,27 @@ export default function Step2Page() {
           />
         )}
 
-        {/* 🎯 ปุ่มไป Step 3 (แสดงเมื่อครบ 3 จุด) */}
-        {isReady && (
+        {/* ✨ ข้อความกระพริบ */}
+        {!isAllLit && (
+          <div className="absolute top-[8%] left-1/2 -translate-x-1/2 text-white text-lg animate-pulse">
+            คลิกจุดเทียน จุดธูป เพื่อเริ่มพิธี
+          </div>
+        )}
+
+        {/* 🙏 ข้อความอธิษฐาน */}
+        {showPrayText && !showDoneButton && (
+          <div className="absolute top-[8%] left-1/2 -translate-x-1/2 text-yellow-300 text-xl animate-pulse">
+            🙏 กรุณาอธิษฐาน
+          </div>
+        )}
+
+        {/* ✅ ปุ่ม "อธิษฐานเสร็จแล้ว" */}
+        {showDoneButton && (
           <button
-            onClick={() => router.push('/step3')}
-            className="absolute bottom-5 left-1/2 -translate-x-1/2 bg-yellow-400 text-black px-6 py-2 rounded-full text-lg font-bold shadow-lg animate-pulse"
+            className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-2 px-4 rounded-xl shadow-xl transition"
+            onClick={() => {
+              window.location.href = '/step3';
+            }}
           >
             อธิษฐานเสร็จแล้ว
           </button>
