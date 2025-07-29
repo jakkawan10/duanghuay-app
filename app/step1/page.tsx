@@ -34,7 +34,7 @@ export default function Step1Page() {
         <video
           ref={videoRef}
           className="w-full h-full object-cover rounded-xl shadow-xl"
-          src="/videostep1.mp4"
+          src="/videostep1-v2.mp4"
           autoPlay
           loop
           playsInline
