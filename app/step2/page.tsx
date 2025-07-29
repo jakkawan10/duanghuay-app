@@ -3,60 +3,47 @@
 import { useState } from 'react';
 
 export default function Step2Page() {
-  const [flameLeft, setFlameLeft] = useState(false);
-  const [flameRight, setFlameRight] = useState(false);
-  const [incense, setIncense] = useState(false);
+  const [showFlameLeft, setShowFlameLeft] = useState(false);
+  const [showIncense, setShowIncense] = useState(false);
 
   return (
     <div className="w-screen h-screen flex items-center justify-center bg-black">
       <div className="relative w-full max-w-[450px] aspect-[3/4] overflow-hidden rounded-xl shadow-xl">
 
-        {/* ภาพพื้นหลังพระพุทธรูป */}
+        {/* 🖼️ พื้นหลังพระ */}
         <img
           src="/step2-bg.jpg"
           className="w-full h-full object-cover"
           alt="พิธีกรรม"
         />
 
-        {/* ✅ พื้นที่คลิก: เทียนซ้าย */}
+        {/* 🔥 พื้นที่คลิกเทียนซ้าย */}
         <div
-          onClick={() => setFlameLeft(true)}
-          className="absolute top-[57.5%] left-[12%] w-[60px] h-[100px] cursor-pointer"
+          onClick={() => setShowFlameLeft(true)}
+          className="absolute top-0 left-0 w-full h-full"
         />
 
-        {/* ✅ พื้นที่คลิก: เทียนขวา */}
+        {/* 🪔 พื้นที่คลิกธูป */}
         <div
-          onClick={() => setFlameRight(true)}
-          className="absolute top-[57.5%] right-[12%] w-[60px] h-[100px] cursor-pointer"
+          onClick={() => setShowIncense(true)}
+          className="absolute top-0 left-0 w-full h-full"
         />
 
-        {/* ✅ พื้นที่คลิก: กระถางธูปกลาง */}
-        <div
-          onClick={() => setIncense(true)}
-          className="absolute top-[52%] left-1/2 transform -translate-x-1/2 w-[100px] h-[100px] cursor-pointer"
-        />
-
-        {/* 🔥 เอฟเฟกต์: เทียนซ้าย */}
-        {flameLeft && (
+        {/* 🔥 เอฟเฟกต์ GIF เปลวเทียนซ้าย */}
+        {showFlameLeft && (
           <img
-            src="/effects/flame.gif"
-            className="absolute top-[57.5%] left-[12%] w-[60px] h-[100px] pointer-events-none"
+            src="/effects/flame-left.gif"
+            className="absolute top-0 left-0 w-full h-full object-cover pointer-events-none"
+            alt="flame left"
           />
         )}
 
-        {/* 🔥 เอฟเฟกต์: เทียนขวา */}
-        {flameRight && (
+        {/* 🪔 เอฟเฟกต์ GIF ควันธูป */}
+        {showIncense && (
           <img
-            src="/effects/flame.gif"
-            className="absolute top-[57.5%] right-[12%] w-[60px] h-[100px] pointer-events-none"
-          />
-        )}
-
-        {/* 🪔 เอฟเฟกต์: ควันธูป */}
-        {incense && (
-          <img
-            src="/effects/incense.gif"
-            className="absolute top-[52%] left-1/2 transform -translate-x-1/2 w-[100px] h-[100px] pointer-events-none"
+            src="/effects/incense-center.gif"
+            className="absolute top-0 left-0 w-full h-full object-cover pointer-events-none"
+            alt="incense"
           />
         )}
       </div>
