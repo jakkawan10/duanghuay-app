@@ -1,31 +1,21 @@
-import type { Metadata } from "next"
-import { Inter, Noto_Sans_Thai } from "next/font/google"
-import "./globals.css"
-import { AuthProvider } from "../lib/auth-context"
-import { Toaster } from "../components/ui/toaster"
-import Navbar from "../components/navbar"
+'use client';
 
-const inter = Inter({ subsets: ["latin"] })
-const notoSansThai = Noto_Sans_Thai({
-  subsets: ["thai"],
-  variable: "--font-thai",
-})
-
-export const metadata: Metadata = {
-  title: "ดวงหวย - ระบบทำนายดวงและวิเคราะห์เลขเด็ด",
-  description: "แอปทำนายดวงและวิเคราะห์เลขเด็ดด้วย AI",
-}
+import { usePathname } from 'next/navigation';
+import Navbar from '@/components/Navbar'; // หรือเปลี่ยนเป็น path Navbar ที่คุณใช้
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+
+  // ✅ ซ่อน Navbar บนหน้า Step 1-3
+  const hideNavbarOn = ['/step1', '/step2', '/step3'];
+  const isHidden = hideNavbarOn.includes(pathname);
+
   return (
-    <html lang="th" className={`${inter.className} ${notoSansThai.variable}`}>
+    <html lang="th">
       <body>
-        <AuthProvider>
-          <Navbar />
-          {children}
-          <Toaster />
-        </AuthProvider>
+        {!isHidden && <Navbar />}
+        {children}
       </body>
     </html>
-  )
+  );
 }
