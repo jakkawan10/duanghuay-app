@@ -10,40 +10,40 @@ export default function Step2Page() {
     <div className="w-screen h-screen flex items-center justify-center bg-black">
       <div className="relative w-full max-w-[450px] aspect-[3/4] overflow-hidden rounded-xl shadow-xl">
 
-        {/* 🖼️ พื้นหลังพระ */}
+        {/* 🖼️ พื้นหลังพิธี */}
         <img
           src="/step2-bg.jpg"
           className="w-full h-full object-cover"
-          alt="พิธีกรรม"
+          alt=""
         />
 
-        {/* 🔥 พื้นที่คลิกเทียนซ้าย */}
+        {/* 🔥 คลิกเทียนซ้าย */}
         <div
           onClick={() => setShowFlameLeft(true)}
           className="absolute top-0 left-0 w-full h-full"
         />
 
-        {/* 🪔 พื้นที่คลิกธูป */}
+        {/* 🪔 คลิกธูปกลาง */}
         <div
           onClick={() => setShowIncense(true)}
           className="absolute top-0 left-0 w-full h-full"
         />
 
-        {/* 🔥 เอฟเฟกต์ GIF เปลวเทียนซ้าย */}
+        {/* 🔥 เอฟเฟกต์เปลวเทียนซ้าย */}
         {showFlameLeft && (
           <img
-            src="/effects/flame-left.gif"
+            src="/effects/flame.gif"
             className="absolute top-0 left-0 w-full h-full object-cover pointer-events-none"
-            alt="flame left"
+            alt=""
           />
         )}
 
-        {/* 🪔 เอฟเฟกต์ GIF ควันธูป */}
+        {/* 🪔 เอฟเฟกต์ควันธูป */}
         {showIncense && (
           <img
-            src="/effects/incense-center.gif"
+            src="/effects/incense.gif"
             className="absolute top-0 left-0 w-full h-full object-cover pointer-events-none"
-            alt="incense"
+            alt=""
           />
         )}
       </div>
