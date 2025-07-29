@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { Button } from "@/components/ui/button";
 
 export default function Step2Page() {
   const router = useRouter();
@@ -14,82 +15,60 @@ export default function Step2Page() {
     router.push("/step3");
   };
 
+  const allComplete = leftFlame && rightFlame && incense;
+
   return (
     <div className="relative w-full h-screen overflow-hidden">
-      {/* พื้นหลังวิดีโอ + เสียง */}
+      {/* วิดีโอพื้นหลังพร้อมเสียง */}
       <video
-        src="/videos/step2.mp4"
+        src="/videostep2.mp4"
         autoPlay
         loop
         muted={false}
+        playsInline
         className="absolute top-0 left-0 w-full h-full object-cover"
       />
 
-      {/* จุดเทียนซ้าย */}
+      {/* จุดคลิกเทียนซ้าย */}
       <div
-        className="absolute bottom-24 left-6 z-10 cursor-pointer"
+        className="absolute bottom-[15%] left-[20%] w-[60px] h-[150px] z-20 cursor-pointer"
         onClick={() => setLeftFlame(true)}
-      >
-        {leftFlame && (
-          <Image
-            src="/effects/flame.gif"
-            alt="flame-left"
-            width={60}
-            height={80}
-          />
-        )}
-      </div>
+      />
 
-      {/* จุดเทียนขวา */}
+      {/* จุดคลิกเทียนขวา */}
       <div
-        className="absolute bottom-24 right-6 z-10 cursor-pointer"
+        className="absolute bottom-[15%] right-[20%] w-[60px] h-[150px] z-20 cursor-pointer"
         onClick={() => setRightFlame(true)}
-      >
-        {rightFlame && (
-          <Image
-            src="/effects/flame-right.gif"
-            alt="flame-right"
-            width={60}
-            height={80}
-          />
-        )}
-      </div>
+      />
 
-      {/* จุดธูปตรงกลาง */}
+      {/* จุดคลิกธูปกลาง */}
       <div
-        className="absolute bottom-20 left-1/2 -translate-x-1/2 z-10 cursor-pointer"
+        className="absolute bottom-[10%] left-1/2 -translate-x-1/2 w-[100px] h-[100px] z-20 cursor-pointer"
         onClick={() => setIncense(true)}
-      >
-        {incense && (
-          <Image
-            src="/effects/incense.gif"
-            alt="incense"
-            width={80}
-            height={80}
-          />
-        )}
-      </div>
+      />
 
-      {/* ควันกลางจอ */}
-      {leftFlame && rightFlame && incense && (
+      {/* แสดงควันเมื่อครบทุกจุด */}
+      {allComplete && (
         <Image
           src="/effects/smoke-center.gif"
           alt="smoke"
           width={150}
           height={150}
-          className="absolute top-10 left-1/2 -translate-x-1/2 z-20"
+          className="absolute top-10 left-1/2 -translate-x-1/2 z-30"
         />
       )}
 
-      {/* ปุ่มไปหน้า Step 3 */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30">
-        <button
-          onClick={handleNext}
-          className="bg-yellow-400 text-black px-6 py-2 rounded-xl shadow-lg hover:bg-yellow-300 transition"
-        >
-          อธิษฐานเสร็จแล้ว
-        </button>
-      </div>
+      {/* ปุ่มไป Step 3 */}
+      {allComplete && (
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30">
+          <Button
+            onClick={handleNext}
+            className="bg-yellow-400 text-black px-6 py-2 rounded-xl shadow-lg hover:bg-yellow-300 transition"
+          >
+            อธิษฐานเสร็จแล้ว
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
