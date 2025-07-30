@@ -1,33 +1,34 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { redirect } from "next/navigation";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+'use client'
 
-export default async function HomePage() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) {
-    return redirect("/auth");
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { onAuthStateChanged } from 'firebase/auth'
+import { auth } from '@/lib/firebase'
+
+export default function HomePage() {
+  const router = useRouter()
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setLoading(false)
+      } else {
+        router.push('/login')
+      }
+    })
+
+    return () => unsubscribe()
+  }, [router])
+
+  if (loading) {
+    return <div className="text-white text-center mt-10">กำลังโหลด...</div>
   }
 
-  const uid = (session.user as { uid: string }).uid;
-  const userRef = doc(db, "users", uid);
-  const userSnap = await getDoc(userRef);
-
-  const data = userSnap.data();
-  const step1 = data?.step1Done;
-  const step2 = data?.step2Done;
-  const step3 = data?.step3Done;
-
-  // เช็คว่าทำครบ 3 ขั้นหรือยัง
-  if (!step1) return redirect("/step1");
-  if (!step2) return redirect("/step2");
-  if (!step3) return redirect("/step3");
-
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen">
-      <h1 className="text-3xl font-bold">🎉 ยินดีต้อนรับ VIP!</h1>
-      <p className="mt-4 text-green-600">ตอนนี้คุณสามารถเข้าถึงฟีเจอร์วิเคราะห์เลขเด็ดได้แล้ว!</p>
-    </main>
-  );
+    <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white">
+      <h1 className="text-4xl font-bold text-yellow-400 mb-4">ยินดีต้อนรับ!</h1>
+      <p>นี่คือหน้าแอปดวงหวยหลังเข้าสู่ระบบ</p>
+    </div>
+  )
 }
