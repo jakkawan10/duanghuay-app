@@ -1,51 +1,41 @@
-import { NextAuthOptions } from "next-auth";
-import { getServerSession } from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
-import { auth } from "./firebase";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import NextAuth, { type NextAuthOptions } from "next-auth";
+import GoogleProvider from "next-auth/providers/google";
+import { FirestoreAdapter } from "@auth/firebase-adapter";
+import { cert } from "firebase-admin/app";
+import type { Adapter } from "next-auth/adapters";
 
 export const authOptions: NextAuthOptions = {
   providers: [
-    CredentialsProvider({
-      name: "Credentials",
-      credentials: {
-        email: { label: "Email", type: "text" },
-        password: { label: "Password", type: "password" },
-      },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
-        try {
-          const userCred = await signInWithEmailAndPassword(
-            auth,
-            credentials.email,
-            credentials.password
-          );
-          const user = userCred.user;
-          return {
-            id: user.uid,
-            email: user.email,
-            name: user.displayName || "",
-          };
-        } catch (err) {
-          return null;
-        }
-      },
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
   ],
-  session: {
-    strategy: "jwt",
-  },
-  pages: {
-    signIn: "/auth",
-  },
+  adapter: FirestoreAdapter({
+    credential: cert({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+    }),
+  }) as Adapter,
   callbacks: {
     async jwt({ token, user }) {
-      if (user) token.uid = user.id;
+      if (user) {
+        token.uid = user.id; // หรือ user.uid หากมี
+      }
       return token;
     },
     async session({ session, token }) {
-      if (token?.uid && session.user) session.user.uid = token.uid as string;
+      if (token?.uid && session.user) {
+        (session.user as { uid?: string }).uid = token.uid as string;
+      }
       return session;
     },
   },
+  session: {
+    strategy: "jwt",
+  },
 };
+
+const handler = NextAuth(authOptions);
+export { handler as GET, handler as POST };
