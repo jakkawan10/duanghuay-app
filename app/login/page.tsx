@@ -39,12 +39,13 @@ useEffect(() => {
         description: "ยินดีต้อนรับกลับสู่ดวงหวย",
       })
       router.push("/home")
-    } catch (error: any) {
-      toast({
-        title: "เข้าสู่ระบบไม่สำเร็จ",
-        description: error.message,
-        variant: "destructive",
-      })
+  } catch (error: any) {
+  console.error("Login error:", error)  // ✅ เพิ่มบรรทัดนี้
+  toast({
+    title: "เข้าสู่ระบบไม่สำเร็จ",
+    description: error.message,
+    variant: "destructive",
+  })
     } finally {
       setLoading(false)
     }
