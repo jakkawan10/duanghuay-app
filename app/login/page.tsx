@@ -1,6 +1,6 @@
 "use client"
 
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth'; // ✅ เอา getAuth ออก
 
 import type React from "react"
 
