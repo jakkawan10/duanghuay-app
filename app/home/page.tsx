@@ -12,28 +12,28 @@ export default function HomePage() {
   const router = useRouter()
 
   useEffect(() => {
-  const auth = getAuth()
   const unsubscribe = onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      router.push('/login')
-      return
-    }
-
-    try {
-      const userDoc = await getDoc(doc(db, 'users', user.uid))
-      console.log("userDoc.exists:", userDoc.exists()) // ✅ debug
-      if (userDoc.exists()) {
-        const data = userDoc.data()
-        console.log("user data:", data) // ✅ debug
-        setIsVIP(data?.isVIP === true)
-      } else {
-        setIsVIP(false)
+    if (user) {
+      console.log('🟢 Login user:', user.uid)
+      try {
+        const userDoc = await getDoc(doc(db, 'users', user.uid))
+        if (userDoc.exists()) {
+          const userData = userDoc.data()
+          console.log('🟢 User data:', userData)
+          if (!userData.isVIP) {
+            alert('คุณยังไม่ได้เป็น VIP')
+          }
+        } else {
+          console.log('❌ No user document found')
+          router.push('/login')
+        }
+      } catch (error) {
+        console.error('🔥 Error reading userDoc:', error)
+        router.push('/login')
       }
-    } catch (error) {
-      console.error('Error fetching user document:', error)
-      setIsVIP(false)
-    } finally {
-      setLoading(false)
+    } else {
+      console.log('🔴 User not authenticated')
+      router.push('/login')
     }
   })
 
