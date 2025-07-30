@@ -11,7 +11,7 @@ export default async function HomeLayout({ children }: { children: ReactNode }) 
     return redirect("/auth");
   }
 
-  const uid = session.user.uid;
+  const uid = (session.user as { uid: string }).uid;
   const userRef = doc(db, "users", uid);
   const userSnap = await getDoc(userRef);
 
