@@ -12,21 +12,28 @@ export default function HomePage() {
   const router = useRouter()
 
   useEffect(() => {
-    const auth = getAuth()
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        router.push('/login')
-        return
-      }
+  const auth = getAuth()
+  const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      router.push('/login')
+      return
+    }
 
+    try {
       const userDoc = await getDoc(doc(db, 'users', user.uid))
       if (userDoc.exists()) {
         const data = userDoc.data()
         setIsVIP(data?.isVIP === true)
+      } else {
+        setIsVIP(false)
       }
-
+    } catch (error) {
+      console.error('Error fetching user document:', error)
+      setIsVIP(false)
+    } finally {
       setLoading(false)
-    })
+    }
+  })
 
     return () => unsubscribe()
   }, [router])
