@@ -1,39 +1,29 @@
-import './globals.css'
-import { Inter } from 'next/font/google'
-import Link from 'next/link'
-import { auth } from '@/lib/firebase'
+import type { ReactNode } from "react";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
-const inter = Inter({ subsets: ['latin'] })
+export default async function HomeLayout({ children }: { children: ReactNode }) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) {
+    return redirect("/auth");
+  }
 
-export const metadata = {
-  title: 'ดวงหวย',
-  description: 'แอปดูดวงวิเคราะห์เลขเด็ด',
-}
+  const uid = session.user.uid;
+  const userRef = doc(db, "users", uid);
+  const userSnap = await getDoc(userRef);
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const user = auth.currentUser
+  const data = userSnap.data();
+  const step1 = data?.step1Done;
+  const step2 = data?.step2Done;
+  const step3 = data?.step3Done;
 
-  return (
-    <html lang="th">
-      <body className={inter.className}>
-        <header className="bg-white shadow-md py-4 px-6 flex justify-between items-center">
-          <Link href="/home">
-            <span className="text-xl font-bold text-orange-500">🔮 ดวงหวย</span>
-          </Link>
-          {!user && (
-            <div className="flex gap-2">
-              <Link href="/auth">
-                <button className="px-4 py-1 border rounded">เข้าสู่ระบบ</button>
-              </Link>
-              <Link href="/auth?tab=register">
-                <button className="px-4 py-1 bg-yellow-400 text-white rounded">สมัครสมาชิก</button>
-              </Link>
-            </div>
-          )}
-        </header>
+  // ห้ามเข้าหน้า home layout ถ้ายังทำ step ไม่ครบ
+  if (!step1) return redirect("/step1");
+  if (!step2) return redirect("/step2");
+  if (!step3) return redirect("/step3");
 
-        <main>{children}</main>
-      </body>
-    </html>
-  )
+  return <>{children}</>;
 }
