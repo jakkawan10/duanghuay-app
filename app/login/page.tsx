@@ -22,6 +22,15 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+useEffect(() => {
+  const unsubscribe = onAuthStateChanged(auth, (user) => {
+    if (user) {
+      router.push("/home")
+    }
+  })
+
+  return () => unsubscribe()
+}, [])
 
     try {
       await signInWithEmailAndPassword(auth, email, password)
