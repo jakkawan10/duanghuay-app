@@ -21,8 +21,10 @@ export default function HomePage() {
 
     try {
       const userDoc = await getDoc(doc(db, 'users', user.uid))
+      console.log("userDoc.exists:", userDoc.exists()) // ✅ debug
       if (userDoc.exists()) {
         const data = userDoc.data()
+        console.log("user data:", data) // ✅ debug
         setIsVIP(data?.isVIP === true)
       } else {
         setIsVIP(false)
