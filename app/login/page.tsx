@@ -4,87 +4,61 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { signInWithEmailAndPassword } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
-import Link from 'next/link'
-
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { useToast } from '@/hooks/use-toast'
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const router = useRouter()
-  const { toast } = useToast()
+  const router = useRouter()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
+  const handleLogin = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      await signInWithEmailAndPassword(auth, email, password)
+      router.push('/home') // ✅ ชี้ไปหน้าใหม่ที่มีอยู่จริง เช่น /home
+    } catch (err: any) {
+      setError('อีเมลหรือรหัสผ่านไม่ถูกต้อง')
+    } finally {
+      setLoading(false)
+    }
+  }
 
-    try {
-      await signInWithEmailAndPassword(auth, email, password)
-      router.push('/home')
-    } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'เข้าสู่ระบบล้มเหลว',
-        description: error.message,
-      })
-      setLoading(false)
-    }
-  }
-
-  return (
-    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-purple-400 to-blue-500">
-      <Card className="w-[350px] shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-center text-yellow-500 text-2xl">
-            เข้าสู่ระบบ
-          </CardTitle>
-          <CardDescription className="text-center">
-            เข้าสู่โลกแห่งดวงและเลขเด็ด
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <Input
-              type="email"
-              placeholder="อีเมล"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-            <Input
-              type="password"
-              placeholder="รหัสผ่าน"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-            <Button
-              type="submit"
-              className="w-full bg-gradient-to-r from-yellow-400 to-orange-500"
-              disabled={loading}
-            >
-              {loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
-            </Button>
-          </form>
-
-          <p className="mt-4 text-center text-sm">
-            ยังไม่มีบัญชี?{' '}
-            <Link href="/register" className="text-yellow-400 underline">
-              สมัครสมาชิก
-            </Link>
-          </p>
-        </CardContent>
-      </Card>
-    </div>
-  )
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-purple-400 to-blue-400">
+      <div className="bg-white/10 border border-white/30 p-8 rounded-xl w-full max-w-md text-center shadow-xl backdrop-blur-md">
+        <h1 className="text-3xl font-bold text-yellow-400 mb-2">เข้าสู่ระบบ</h1>
+        <p className="text-black mb-6">เข้าสู่โลกแห่งดวงและเลขเด็ด</p>
+        <input
+          type="email"
+          placeholder="อีเมล"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="w-full px-4 py-2 mb-3 rounded-lg border"
+        />
+        <input
+          type="password"
+          placeholder="รหัสผ่าน"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="w-full px-4 py-2 mb-3 rounded-lg border"
+        />
+        {error && <p className="text-red-500 mb-3">{error}</p>}
+        <button
+          onClick={handleLogin}
+          disabled={loading}
+          className="w-full py-2 rounded-lg bg-gradient-to-r from-yellow-400 to-orange-400 text-white font-bold"
+        >
+          {loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
+        </button>
+        <p className="mt-4 text-sm text-black">
+          ยังไม่มีบัญชี?{' '}
+          <a href="/register" className="text-yellow-400 underline">
+            สมัครสมาชิก
+          </a>
+        </p>
+      </div>
+    </div>
+  )
 }
