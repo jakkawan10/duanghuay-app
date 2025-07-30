@@ -6,7 +6,6 @@ import type React from "react"
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth"
 import Link from "next/link"
 import { auth } from "@/lib/firebase"
 import { Button } from "@/components/ui/button"
