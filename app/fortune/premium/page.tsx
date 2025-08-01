@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/lib/auth'
+import { useAuth } from '@/lib/hooks/useAuth'
 import { Card, CardContent } from '@/components/ui/card'
 import { Sparkles } from 'lucide-react'
 

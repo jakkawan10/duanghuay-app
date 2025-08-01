@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { useEffect, useState } from 'react'
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import { useAuth } from '@/lib/auth'
+import { useAuth } from '@/lib/hooks/useAuth'
 
 export default function CheckoutPage() {
   const searchParams = useSearchParams()
