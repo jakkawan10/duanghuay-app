@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useAuth } from '@/lib/hooks/useAuth'
+import { useAuth } from "@/lib/auth-context"
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 

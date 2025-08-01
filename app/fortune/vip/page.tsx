@@ -3,7 +3,7 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/lib/hooks/useAuth'
+import { useAuth } from "@/lib/auth-context"
 import { checkVipAccess } from '@/lib/permissions'
 
 export default function VIPFortunePage() {
