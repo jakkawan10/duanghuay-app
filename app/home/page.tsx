@@ -47,15 +47,17 @@ export default function HomePage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* ดวง */}
-          <Link
-            href="/horoscope"
-            className="bg-white shadow-md p-6 rounded-xl hover:bg-yellow-100 transition"
-          >
-            <h2 className="text-xl font-bold mb-2">เบิกญาณทำนายชะตา</h2>
-            <p className="text-sm mt-2">เลือกหัวข้อดวงการเงิน ความรัก ฯลฯ</p>
+          // ตัวอย่างปุ่มใน Home page
+          <Link href="/fortune">
+            <Card className="hover:shadow-lg transition">
+              <CardContent className="text-center p-6">
+                <div className="text-2xl mb-2">🔮 เบิกญาณทำนายชะตา</div>
+                <p className="text-sm text-gray-500">เลือกหรือสวดอธิษฐาน แล้วไปต่อ</p>
+              </CardContent>
+            </Card>
           </Link>
 
-          {/* เลขเด็ด */}
+           {/* เลขเด็ด */}
           <Link
             href="/lucky"
             className="bg-white shadow-md p-6 rounded-xl hover:bg-pink-100 transition"
