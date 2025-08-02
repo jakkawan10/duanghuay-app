@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from '@/components/ui/use-toast'
-import { updateUserRole } from '@/lib/firebase/updateUserRole'
 
 export default function CheckoutPage() {
   const searchParams = useSearchParams()
