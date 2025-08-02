@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { doc, getDoc } from 'firebase/firestore'
-import { db } from '../firebase'
+import { db } from '@/lib/firebase'
 
 export function useUserRole() {
   const { user } = useAuth()
