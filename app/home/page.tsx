@@ -7,6 +7,7 @@ import { auth, db } from '@/lib/firebase'
 import { onAuthStateChanged } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
 import Link from 'next/link'
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function HomePage() {
   const router = useRouter()
