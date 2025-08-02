@@ -1,5 +1,5 @@
 // lib/firebase/updateUserPlan.ts
-import { db } from './firebase'
+import { db } from '../firebase' 
 import { doc, updateDoc } from 'firebase/firestore'
 
 export async function updateUserPlan(uid: string, plan: 'free' | 'premium' | 'vip') {
