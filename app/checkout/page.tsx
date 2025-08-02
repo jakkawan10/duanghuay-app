@@ -20,7 +20,6 @@ export default function CheckoutPage() {
     if (!plan) return
 
     try {
-      await updateUserRole(plan)
       toast({
         title: `สมัครแผน ${plan === 'premium' ? 'Premium' : 'VIP'} สำเร็จ`,
         description: 'คุณสามารถใช้งานสิทธิ์ได้ทันที',
