@@ -51,7 +51,7 @@ export default function HomePage() {
             href="/horoscope"
             className="bg-white shadow-md p-6 rounded-xl hover:bg-yellow-100 transition"
           >
-            <h2 className="text-xl font-semibold">🔮 ดูดวงรายสัปดาห์</h2>
+            <h2 className="text-xl font-bold mb-2">เบิกญาณทำนายชะตา</h2>
             <p className="text-sm mt-2">เลือกหัวข้อดวงการเงิน ความรัก ฯลฯ</p>
           </Link>
 
