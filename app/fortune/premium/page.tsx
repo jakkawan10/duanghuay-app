@@ -1,40 +1,38 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
-import { Card, CardContent } from '@/components/ui/card'
-import { Sparkles } from 'lucide-react'
 
 export default function PremiumFortunePage() {
-  const { user, loading } = useAuth()
   const router = useRouter()
+  const { user, loading, userData } = useAuth()
 
   useEffect(() => {
-    if (role !== 'premium' && role !== 'vip') {
-      router.replace('/vip/plan')
+    if (!loading) {
+      if (!user) {
+        router.replace('/login')
+      } else if (userData?.vipPlan !== 'premium') {
+        router.replace('/vip/plan')
+      }
     }
-  }, [user, loading, router])
+  }, [user, loading, userData, router])
+
+  if (loading || !user || userData?.vipPlan !== 'premium') {
+    return <p className="text-center mt-10">กำลังโหลด...</p>
+  }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-purple-200 to-blue-100 p-6 text-gray-800">
-      <div className="max-w-xl mx-auto space-y-6">
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Sparkles className="text-yellow-500" /> เบิกญาณทำนายชะตา (Premium)
-        </h1>
-        <Card>
-          <CardContent className="space-y-2 pt-6">
-            <p>
-              คุณสามารถใช้ระบบพูดคุยถามตอบกับหมอดูได้ไม่เกิน <strong>5 ข้อความต่อวัน</strong> ในหัวข้อต่าง ๆ เช่น การเงิน ความรัก อนาคต ฯลฯ
-            </p>
-            <p>
-              ระบบนี้จำลองหมอดูจากเบื้องบนด้วยเทคโนโลยีพิเศษเพื่อช่วยแนะแนวทางชีวิต
-            </p>
-            <p className="text-sm text-gray-500">
-              *หากต้องการใช้งานแบบไม่จำกัด กรุณาอัปเกรดเป็น VIP
-            </p>
-          </CardContent>
-        </Card>
+    <main className="p-6 max-w-xl mx-auto">
+      <h1 className="text-2xl font-bold text-center mb-4">🔮 เบิกญาณทำนายชะตา - ระดับ Premium</h1>
+      <p className="text-center mb-6">คุณสามารถเข้าถึงดวงชะตารายสัปดาห์ในระดับ Premium ได้ที่นี่</p>
+
+      {/* ตัวอย่างข้อมูลดวง */}
+      <div className="bg-yellow-100 border border-yellow-300 p-4 rounded-lg shadow">
+        <h2 className="text-lg font-semibold">สัปดาห์นี้:</h2>
+        <p className="mt-2">การงาน: มีโอกาสใหม่เข้ามา แต่ต้องกล้าเสี่ยง</p>
+        <p>ความรัก: คนโสดมีเกณฑ์ได้พบคนใหม่</p>
+        <p>การเงิน: มีรายรับพิเศษ แต่ระวังการใช้จ่ายเกินตัว</p>
       </div>
     </main>
   )
