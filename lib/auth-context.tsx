@@ -6,6 +6,7 @@ import { createContext, useContext, useEffect, useState } from "react"
 import { type User, onAuthStateChanged } from "firebase/auth"
 import { doc, getDoc } from "firebase/firestore"
 import { auth } from './firebase';
+import { db } from './firebase';
 
 interface UserData {
   name: string
