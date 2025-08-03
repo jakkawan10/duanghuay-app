@@ -16,4 +16,5 @@ const app = initializeApp(firebaseConfig)
 
 export const auth = getAuth(app)
 export const firestore = getFirestore(app)
+export const db = firestore  // 👈 เพิ่มบรรทัดนี้ ถ้าโค้ดอื่นใช้ชื่อว่า db
 export const storage = getStorage(app)
