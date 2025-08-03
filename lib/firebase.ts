@@ -12,9 +12,8 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 }
 
-const app = initializeApp(firebaseConfig)
-
+export const app = initializeApp(firebaseConfig) // 👈 ต้อง export ตัวนี้ออกไปด้วย
 export const auth = getAuth(app)
 export const firestore = getFirestore(app)
-export const db = firestore  // 👈 เพิ่มบรรทัดนี้ ถ้าโค้ดอื่นใช้ชื่อว่า db
+export const db = firestore
 export const storage = getStorage(app)
