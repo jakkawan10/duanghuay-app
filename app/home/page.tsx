@@ -1,4 +1,3 @@
-// app/home/page.tsx
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -7,7 +6,6 @@ import { auth, db } from '@/lib/firebase'
 import { onAuthStateChanged } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
 import Link from 'next/link'
-import { Card, CardContent } from "@/components/ui/card";
 
 export default function HomePage() {
   const router = useRouter()
@@ -23,7 +21,7 @@ export default function HomePage() {
           const ritual = data.ritualStatus || {}
 
           if (!ritual.step1 || !ritual.step2 || !ritual.step3) {
-            router.push('/login') // fallback ถ้า ritual ไม่ครบ
+            router.push('/login')
           } else {
             setUser(user)
             setLoading(false)
@@ -43,59 +41,57 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-300 to-blue-300 p-4 text-gray-800">
-      <div className="max-w-3xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6 text-center">📿 แอปดวงหวย DuangHuay</h1>
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold mb-4 text-center">📿 DuangHuay – เปิดดวงรับโชค</h1>
+        <p className="text-center text-sm text-gray-700 mb-6">
+          ดูเลขเด็ดฟรีได้ 1 เทพ หากต้องการดูเทพอื่นๆ กรุณาสมัคร VIP
+        </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* ดวง */}
-          // ตัวอย่างปุ่มใน Home page
-          <Link href="/fortune">
-            <Card className="hover:shadow-lg transition">
-              <CardContent className="text-center p-6">
-                <div className="text-2xl mb-2">🔮 เบิกญาณทำนายชะตา</div>
-                <p className="text-sm text-gray-500">เลือกหรือสวดอธิษฐาน แล้วไปต่อ</p>
-              </CardContent>
-            </Card>
+          <Link href="/fortune/deity/sroiboon">
+            <button className="bg-white w-full p-5 rounded-xl shadow hover:bg-pink-100 transition text-center">
+              🙇‍♀️ เจ้าแม่สร้อยบุญ
+            </button>
+          </Link>
+          <Link href="/fortune/deity/saifah">
+            <button className="bg-white w-full p-5 rounded-xl shadow hover:bg-blue-100 transition text-center">
+              ⚡ เจ้าแม่สายฟ้า
+            </button>
+          </Link>
+          <Link href="/fortune/deity/intree">
+            <button className="bg-white w-full p-5 rounded-xl shadow hover:bg-yellow-100 transition text-center">
+              🧙‍♂️ เจ้าพ่ออินทรีย์แดง
+            </button>
+          </Link>
+          <Link href="/fortune/deity/samdaeng">
+            <button className="bg-white w-full p-5 rounded-xl shadow hover:bg-green-100 transition text-center">
+              🤪 เจ้าพ่อสำแดงฤทธิ์
+            </button>
           </Link>
 
-           {/* เลขเด็ด */}
-          <Link
-            href="/lucky"
-            className="bg-white shadow-md p-6 rounded-xl hover:bg-pink-100 transition"
-          >
-            <h2 className="text-xl font-semibold">🎯 เลขเด็ด AI</h2>
-            <p className="text-sm mt-2">คำนวณเลขจากข่าว และผลหวยย้อนหลัง</p>
+          {/* ปุ่มเทพ AI */}
+          <Link href="/fortune/ai">
+            <button className="bg-gradient-to-r from-yellow-400 to-red-400 w-full p-6 rounded-xl shadow-lg text-white font-bold text-center text-xl hover:scale-105 transition">
+              🤖 เทพ AI เลขเด็ดสุดล้ำ
+            </button>
           </Link>
 
-          {/* VIP */}
-          <Link
-            href="/vip"
-            className="bg-white shadow-md p-6 rounded-xl hover:bg-green-100 transition"
-          >
-            <h2 className="text-xl font-semibold">💎 สมัคร VIP</h2>
-            <p className="text-sm mt-2">ปลดล็อกฟีเจอร์พิเศษทั้งหมด</p>
-          </Link>
-
-          {/* ประวัติย้อนหลัง */}
-          <Link
-            href="/history"
-            className="bg-white shadow-md p-6 rounded-xl hover:bg-blue-100 transition"
-          >
-            <h2 className="text-xl font-semibold">📜 ดูประวัติย้อนหลัง</h2>
-            <p className="text-sm mt-2">ดูดวงและเลขที่เคยได้</p>
+          {/* สมัคร VIP */}
+          <Link href="/vip">
+            <button className="bg-white w-full p-5 rounded-xl shadow hover:bg-purple-100 transition text-center">
+              💎 สมัคร VIP
+            </button>
           </Link>
 
           {/* โปรไฟล์ */}
-          <Link
-            href="/profile"
-            className="bg-white shadow-md p-6 rounded-xl hover:bg-purple-100 transition"
-          >
-            <h2 className="text-xl font-semibold">👤 โปรไฟล์ของฉัน</h2>
-            <p className="text-sm mt-2">แก้ไขข้อมูล และสถานะ VIP</p>
+          <Link href="/profile">
+            <button className="bg-white w-full p-5 rounded-xl shadow hover:bg-gray-100 transition text-center">
+              👤 โปรไฟล์ของฉัน
+            </button>
           </Link>
         </div>
 
-        <p className="mt-8 text-center text-sm text-gray-600">ขอบคุณที่ใช้ DuangHuay 🎉</p>
+        <p className="mt-8 text-center text-sm text-gray-600">🙏 ขอบคุณที่ใช้ DuangHuay</p>
       </div>
     </div>
   )

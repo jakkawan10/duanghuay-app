@@ -1,5 +1,5 @@
 // lib/firebase.ts
-import { initializeApp } from 'firebase/app'
+import { initializeApp, getApps, getApp } from 'firebase/app'
 import { getFirestore } from 'firebase/firestore'
 import { getAuth } from 'firebase/auth'
 
@@ -12,8 +12,10 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 }
 
-const app = initializeApp(firebaseConfig)
-const firestore = getFirestore(app)
+// ✅ เช็กว่ามีการ initialize ไปแล้วหรือยัง (ป้องกัน error)
+const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig)
+
+const db = getFirestore(app)
 const auth = getAuth(app)
 
-export { app, firestore, auth }
+export { app, db, auth }
