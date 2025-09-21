@@ -1,7 +1,7 @@
 // ========================
 // FILE: app/actions/chooseDeity.ts
 // ========================
-import { db } from '@/lib/firebase/firebase';
+import { db } from '@/lib/firebase';
 import { getAuth } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 
