@@ -4,9 +4,9 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
-import { db } from '@/lib/firebase/firebase'
+import { db } from '@/lib/firebase/firebase';
 import { doc, setDoc } from 'firebase/firestore'
-import { useAuth } from '@/hooks/use-auth'
+import { useAuth } from '@/lib/hooks/useAuth';
 import Image from 'next/image'
 
 const deities = [
