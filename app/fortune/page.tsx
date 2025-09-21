@@ -16,7 +16,7 @@ export default function FortunePage() {
       const user = auth.currentUser
       if (!user) return router.push('/login')
 
-      const docRef = doc(firestore, 'users', user.uid)
+      const docRef = doc(db, 'users', user.uid)
       const docSnap = await getDoc(docRef)
 
       if (!docSnap.exists()) return
