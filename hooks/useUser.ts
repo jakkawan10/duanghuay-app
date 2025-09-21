@@ -1,8 +1,7 @@
 'use client'
 
-import { useAuth } from '@/lib/hooks/useAuth'        ✅
-import { useUserRole } from '@/lib/hooks/useUserRole'✅
-
+import { useAuth } from '@/lib/useAuth'
+import { useUserRole } from '@/lib/useUserRole'
 
 export function useUser() {
   const { user, loading: authLoading } = useAuth()
