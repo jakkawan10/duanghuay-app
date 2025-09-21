@@ -12,10 +12,7 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 }
 
-// ✅ เช็กว่ามีการ initialize ไปแล้วหรือยัง (ป้องกัน error)
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig)
 
-const db = getFirestore(app)
-const auth = getAuth(app)
-
-export { app, db, auth }
+export const db = getFirestore(app)
+export const auth = getAuth(app)

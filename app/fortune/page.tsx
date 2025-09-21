@@ -3,7 +3,8 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { getAuth } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
-import { firestore } from '@/lib/firebase'
+import { db } from '@/lib/firebase'
+
 
 export default function FortunePage() {
   const [tier, setTier] = useState('')
