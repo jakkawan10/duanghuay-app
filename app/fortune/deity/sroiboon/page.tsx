@@ -59,7 +59,7 @@ export default function SorayboonPage() {
           placeholder={placeholder}
         />
       ) : (
-        <div className="p-2 border rounded bg-gray-100">{data[key] || '—'}</div>
+        <div className="p-2 border rounded bg-gray-800 text-white">{data[key] || '—'}</div>
       )}
     </div>
   );
@@ -76,9 +76,9 @@ export default function SorayboonPage() {
       <Image
         src="/images/sroiboon.png"
         alt="เจ้าแม่สร้อยบุญ"
-        width={240}
-        height={240}
-        className="rounded-xl mb-6 shadow-md"
+        width={300}
+        height={400}
+        className="mx-auto object-contain"
       />
 
       <div className="bg-white text-black rounded-xl p-4 w-full max-w-md mb-6">
