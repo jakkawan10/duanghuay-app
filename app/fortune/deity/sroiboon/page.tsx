@@ -102,12 +102,10 @@ export default function SorayboonPage() {
         )}
       </div>
 
-      <button
-        onClick={() => router.push('/fortune')}
-        className="bg-yellow-400 px-6 py-2 rounded-full text-black font-semibold"
-      >
-        🔮 กลับสู่หน้าเทพทำนายดวง
-      </button>
+      <Button onClick={() => router.push('/home')}>
+        กลับสู่หน้าเทพ
+      </Button>
+
     </main>
   );
 }
