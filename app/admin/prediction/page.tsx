@@ -1,34 +1,38 @@
 'use client'
+
 import { useEffect, useState } from 'react'
+import { useParams } from 'next/navigation'
 import { db } from '@/lib/firebase'
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
 export default function AdminPredictionPage() {
+  const { god } = useParams() // ดึงชื่อเทพจาก URL เช่น 'intra', 'sroiboon'
   const [luckyNumber, setLuckyNumber] = useState('')
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
+    if (!god) return
     const fetchCurrent = async () => {
-      const ref = doc(db, 'predictions', 'latest')
+      const ref = doc(db, 'predictions', `${god}-latest`)
       const snap = await getDoc(ref)
       if (snap.exists()) {
         setLuckyNumber(snap.data().luckyNumber)
       }
     }
     fetchCurrent()
-  }, [])
+  }, [god])
 
   const handleSave = async () => {
     setLoading(true)
     try {
-      const ref = doc(db, 'predictions', 'latest')
+      const ref = doc(db, 'predictions', `${god}-latest`)
       await setDoc(ref, {
         luckyNumber,
         updatedAt: serverTimestamp(),
       })
-      alert('บันทึกเลขใหม่เรียบร้อยแล้ว')
+      alert(`บันทึกเลขใหม่ของเทพ "${god}" เรียบร้อยแล้ว`)
     } catch (e) {
       console.error(e)
       alert('เกิดข้อผิดพลาด')
@@ -39,7 +43,7 @@ export default function AdminPredictionPage() {
 
   return (
     <div className="max-w-md mx-auto mt-10 p-4 border rounded-xl shadow">
-      <h1 className="text-2xl font-bold mb-4">🔮 กรอกเลขทำนาย (Admin)</h1>
+      <h1 className="text-2xl font-bold mb-4">🔮 กรอกเลขทำนาย: เทพ {god}</h1>
       <Input
         value={luckyNumber}
         onChange={(e) => setLuckyNumber(e.target.value)}
