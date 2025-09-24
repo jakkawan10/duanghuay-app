@@ -66,7 +66,7 @@ export default function DeityPredictionPage() {
       <h1 className="text-2xl font-bold mb-2">เลขเด็ดงวด {roundKey}</h1>
 
       <Image
-        src={`/images/.png`}
+        src={`/images/${god}.png`}
         alt={god}
         width={300}
         height={300}
