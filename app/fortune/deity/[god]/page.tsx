@@ -1,85 +1,103 @@
-'use client';
+'use client'
 
-import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import Image from 'next/image';
-import Link from 'next/link';
-import { firestore } from '@/lib/firebase';
+import { useEffect, useState } from 'react'
+import { useParams } from 'next/navigation'
+import { db } from '@/lib/firebase'
+import { doc, getDoc } from 'firebase/firestore'
+import Image from 'next/image'
+import Link from 'next/link'
 
-type LuckyData = {
-  numbers: string[];
-  summary: string;
-  updatedAt: string;
-};
+const defaultData = {
+  oneDigit: '',
+  onePair: '',
+  twoDigit: '',
+  threeDigit: '',
+  fourDigit: '',
+  fiveDigit: '',
+}
 
-const DeityPredictionPage = () => {
-  const { god } = useParams();
-  const [data, setData] = useState<LuckyData | null>(null);
-  const [loading, setLoading] = useState(true);
+export default function DeityPredictionPage() {
+  const { god } = useParams() as { god: string }
+  const [data, setData] = useState(defaultData)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!god || typeof god !== 'string') return;
+    if (!god) return
 
     const loadData = async () => {
       try {
-        const ref = doc(firestore, god, 'latest');
-        const snap = await getDoc(ref);
+        const now = new Date()
+        const day = now.getDate() < 16 ? '01' : '16'
+        const month = `${now.getMonth() + 1}`.padStart(2, '0')
+        const year = now.getFullYear()
+        const roundKey = `${year}-${month}-${day}`
+
+        const ref = doc(db, god, roundKey)
+        const snap = await getDoc(ref)
         if (snap.exists()) {
-          setData(snap.data() as LuckyData);
+          setData(snap.data() as typeof defaultData)
         } else {
-          setData(null);
+          setData(defaultData)
         }
-      } catch (err) {
-        console.error('Error loading data:', err);
-        setData(null);
+      } catch (e) {
+        console.error(e)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
+    }
 
-    loadData();
-  }, [god]);
+    loadData()
+  }, [god])
 
-  if (loading) return <div className="p-6 text-center">⏳ กำลังโหลด...</div>;
-  if (!data) return <div className="p-6 text-center text-red-600">❌ ไม่พบข้อมูล</div>;
+  if (loading) return <p className="text-center mt-10">⏳ กำลังโหลด...</p>
+
+  if (!data.oneDigit && !data.onePair) {
+    return <p className="text-center text-red-500 mt-10">❌ ไม่พบข้อมูล</p>
+  }
+
+  const now = new Date()
+  const day = now.getDate() < 16 ? '01' : '16'
+  const month = `${now.getMonth() + 1}`.padStart(2, '0')
+  const year = now.getFullYear()
+  const roundKey = `${year}-${month}-${day}`
 
   return (
-    <div className="p-6 space-y-6">
-      {/* รูปเทพ */}
-      <div className="text-center">
-        <Image
-          src={`/images/${god}.png`}
-          alt={String(god)}
-          width={240}
-          height={240}
-          className="mx-auto rounded-xl shadow-lg"
-        />
-      </div>
+    <div className="bg-black text-white min-h-screen flex flex-col items-center justify-start pt-6 px-4">
+      <h1 className="text-2xl font-bold mb-2">เลขเด็ดงวด {roundKey}</h1>
 
-      {/* เลขเด็ด */}
-      <div className="text-center space-y-2">
-        <div className="text-xl font-bold text-gray-800">เลขเด็ด</div>
-        <div className="text-3xl font-semibold text-pink-600">
-          {data.numbers.join(', ')}
-        </div>
-        <div className="text-sm text-gray-400">อัปเดตล่าสุด: {data.updatedAt}</div>
-      </div>
+      <Image
+        src={`/images/.png`}
+        alt={god}
+        width={300}
+        height={300}
+        className="mb-4"
+      />
 
-      {/* คำอธิบาย */}
-      <div className="text-gray-700 text-lg whitespace-pre-line">{data.summary}</div>
+      <div className="bg-white text-black p-4 rounded-xl w-full max-w-md">
+        <p>1 ตัวตรงตัวเดียว</p>
+        <input disabled value={data.oneDigit} className="w-full bg-gray-100 rounded p-2 mb-2" />
 
-      {/* ปุ่มกลับ */}
-      <div className="text-center pt-6">
-        <Link href="/fortune">
-          <button className="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold py-2 px-4 rounded-xl shadow-md">
-            🔮 กลับหน้าเลือกเทพ
+        <p>1 ตัวเด่นรอบ</p>
+        <input disabled value={data.onePair} className="w-full bg-gray-100 rounded p-2 mb-2" />
+
+        <p>2 ตัวเป้า</p>
+        <input disabled value={data.twoDigit} className="w-full bg-gray-100 rounded p-2 mb-2" />
+
+        <p>3 ตัวแม่</p>
+        <input disabled value={data.threeDigit} className="w-full bg-gray-100 rounded p-2 mb-2" />
+
+        <p>4 ตัวมหารวย</p>
+        <input disabled value={data.fourDigit} className="w-full bg-gray-100 rounded p-2 mb-2" />
+
+        <p>5 ตัวราชา</p>
+        <input disabled value={data.fiveDigit} className="w-full bg-gray-100 rounded p-2 mb-4" />
+
+        <Link href="/home">
+          <button className="bg-yellow-400 hover:bg-yellow-500 text-black rounded p-2 w-full mt-2">
+            🔮 กลับสู่หน้าเทพพาทายดวง
           </button>
         </Link>
       </div>
     </div>
-  );
-};
-
-export default DeityPredictionPage;
+  )
+}
