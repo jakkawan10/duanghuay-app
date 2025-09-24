@@ -6,6 +6,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Image from 'next/image';
 import Link from 'next/link';
+import { firestore } from '@/lib/firebase';
 
 type LuckyData = {
   numbers: string[];
