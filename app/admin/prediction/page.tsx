@@ -11,7 +11,8 @@ export default function AdminPredictionPage() {
   const { god } = useParams() as { god: string }
   const [luckyNumber, setLuckyNumber] = useState('')
   const [loading, setLoading] = useState(false)
-
+  const ref = doc(db, 'predictions', god)
+  
   useEffect(() => {
     if (!god) return
     const fetchCurrent = async () => {
