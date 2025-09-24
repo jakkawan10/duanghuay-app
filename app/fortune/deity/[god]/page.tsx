@@ -1,44 +1,84 @@
-'use client'
+'use client';
 
-import { useParams } from 'next/navigation'
+import { useParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { doc, getDoc } from 'firebase/firestore';
+import { firestore } from '@/lib/firebase';
+import Image from 'next/image';
+import Link from 'next/link';
 
-const godData: Record<string, { name: string, description: string }> = {
-  sroiboon: {
-    name: 'เจ้าแม่สร้อยบุญ',
-    description: 'เทพแห่งความเมตตา ความรัก และการให้อภัย'
-  },
-  dandok: {
-    name: 'เจ้าแม่ดานดอกษ์ศ์',
-    description: 'เทพีแห่งดอกไม้และพลังธรรมชาติ ที่มีฤทธิ์สงบใจคน'
-  },
-  maneewitch: {
-    name: 'เจ้ามณีเวทยมนต์',
-    description: 'เทพแห่งเวทมนต์ คำทำนาย และพลังลี้ลับ'
-  },
-  intra: {
-    name: 'เจ้าองค์อินทร์แสนดี',
-    description: 'เทพผู้ปกป้อง ผู้เปี่ยมด้วยธรรมะและความยุติธรรม'
-  },
-}
+type LuckyData = {
+  numbers: string[];
+  summary: string;
+  updatedAt: string;
+};
 
-export default function GodPage() {
-  const params = useParams()
-  const godKey = params?.god as string
+const DeityPredictionPage = () => {
+  const { god } = useParams();
+  const [data, setData] = useState<LuckyData | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const god = godData[godKey]
+  useEffect(() => {
+    if (!god || typeof god !== 'string') return;
 
-  if (!god) {
-    return <div className="p-4 text-red-500">ไม่พบเทพที่คุณเลือก</div>
-  }
+    const loadData = async () => {
+      try {
+        const ref = doc(firestore, god, 'latest');
+        const snap = await getDoc(ref);
+        if (snap.exists()) {
+          setData(snap.data() as LuckyData);
+        } else {
+          setData(null);
+        }
+      } catch (err) {
+        console.error('Error loading data:', err);
+        setData(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [god]);
+
+  if (loading) return <div className="p-6 text-center">⏳ กำลังโหลด...</div>;
+  if (!data) return <div className="p-6 text-center text-red-600">❌ ไม่พบข้อมูล</div>;
 
   return (
-    <main className="min-h-screen bg-white text-black p-6">
-      <h1 className="text-2xl font-bold mb-2">{god.name}</h1>
-      <p className="text-lg mb-4">{god.description}</p>
+    <div className="p-6 space-y-6">
+      {/* รูปเทพ */}
+      <div className="text-center">
+        <Image
+          src={`/images/${god}.png`}
+          alt={String(god)}
+          width={240}
+          height={240}
+          className="mx-auto rounded-xl shadow-lg"
+        />
+      </div>
 
-      <button className="bg-yellow-400 px-4 py-2 rounded">
-        🔮 เริ่มพิธีขอคำทำนาย
-      </button>
-    </main>
-  )
-}
+      {/* เลขเด็ด */}
+      <div className="text-center space-y-2">
+        <div className="text-xl font-bold text-gray-800">เลขเด็ด</div>
+        <div className="text-3xl font-semibold text-pink-600">
+          {data.numbers.join(', ')}
+        </div>
+        <div className="text-sm text-gray-400">อัปเดตล่าสุด: {data.updatedAt}</div>
+      </div>
+
+      {/* คำอธิบาย */}
+      <div className="text-gray-700 text-lg whitespace-pre-line">{data.summary}</div>
+
+      {/* ปุ่มกลับ */}
+      <div className="text-center pt-6">
+        <Link href="/fortune">
+          <button className="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold py-2 px-4 rounded-xl shadow-md">
+            🔮 กลับหน้าเลือกเทพ
+          </button>
+        </Link>
+      </div>
+    </div>
+  );
+};
+
+export default DeityPredictionPage;
