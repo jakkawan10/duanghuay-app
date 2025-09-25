@@ -9,10 +9,11 @@ import { onAuthStateChanged } from 'firebase/auth'
 
 const deities = [
   { id: 'sroiboon', label: 'เจ้าแม่สร้อยบุญ', color: 'bg-pink-100' },
-  { id: 'saifah', label: 'เจ้ามณีเวทยมนต์', color: 'bg-blue-100' },
-  { id: 'intree', label: 'เจ้าองค์อินทร์แสนดี', color: 'bg-yellow-100' },
-  { id: 'samdaeng', label: 'เจ้าแม่ดานดอกษ์ศ์', color: 'bg-green-100' }
+  { id: 'maneewitch', label: 'เจ้ามณีเวทยมนต์', color: 'bg-blue-100' },
+  { id: 'intra', label: 'เจ้าองค์อินทร์แสนดี', color: 'bg-yellow-100' },
+  { id: 'dandok', label: 'เจ้าแม่ดานดอกษ์ศ์', color: 'bg-green-100' }
 ]
+
 
 export default function HomePage() {
   const router = useRouter()
