@@ -11,8 +11,7 @@ export default function DeityPage({ params }: { params: { god: string } }) {
   useEffect(() => {
     const load = async () => {
       try {
-        const ref = doc(db, 'predictions', god)
-        const snap = await getDoc(ref)
+        const snap = await getDoc(doc(db, 'predictions', god))
         if (snap.exists()) setData(snap.data())
       } catch (err) {
         console.error(err)
@@ -30,10 +29,10 @@ export default function DeityPage({ params }: { params: { god: string } }) {
 
       <p>วิ่งโดดตัวเดียว: {data.oneDigit}</p>
       <p>ยิงเดี่ยวรอง: {data.onePair}</p>
-      <p>2 ตัวเป้า: {data.twoDigit?.join(' , ')}</p>
-      <p>3 ตัว: {data.threeDigit?.join(' , ')}</p>
-      <p>4 ตัว: {data.fourDigit?.join(' , ')}</p>
-      <p>5 ตัว: {data.fiveDigit?.join(' , ')}</p>
+      <p>2 ตัวเป้า: {data.twoDigit?.join(' / ')}</p>
+      <p>3 ตัว: {data.threeDigit?.join(' / ')}</p>
+      <p>4 ตัว: {data.fourDigit?.join(' / ')}</p>
+      <p>5 ตัว: {data.fiveDigit?.join(' / ')}</p>
     </div>
   )
 }
