@@ -1,126 +1,154 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
-import { doc, getDoc, setDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
+import { db } from '@/lib/firebase';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
+
+type PredictionForm = {
+  single: string;     // วิ่งโดดตัวเดียว
+  backup: string;     // ยิงเดี่ยวรอง
+  double: string[];   // 2 ตัวเป้า
+  triple: string[];   // 3 ตัว
+  quad: string[];     // 4 ตัว
+  penta: string[];    // 5 ตัว
+};
 
 export default function AdminPredictionPage() {
-  const { god } = useParams();
-  const [formData, setFormData] = useState({
-    single: "",
-    backup: "",
-    double: ["", ""],
-    triple: ["", "", ""],
-    quad: ["", "", "", ""],
-    penta: ["", "", "", "", ""],
+  const { god } = useParams<{ god: string }>();
+
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState<PredictionForm>({
+    single: '',
+    backup: '',
+    double: ['', ''],
+    triple: ['', '', ''],
+    quad: ['', '', '', ''],
+    penta: ['', '', '', '', ''],
   });
 
+  // โหลดข้อมูลเก่าจาก Firestore
   useEffect(() => {
     const fetchData = async () => {
-      const ref = doc(db, "predictions", god as string);
+      if (!god) return;
+      const ref = doc(db, 'predictions', god);
       const snap = await getDoc(ref);
       if (snap.exists()) {
-        setFormData(snap.data() as any);
+        setFormData(snap.data() as PredictionForm);
       }
     };
     fetchData();
   }, [god]);
 
-  const handleChange = (field: string, index: number, value: string) => {
+  // handleChange
+  const handleChange = (
+    field: keyof PredictionForm,
+    index: number,
+    value: string
+  ) => {
     setFormData((prev) => {
       if (Array.isArray(prev[field])) {
-        const arr = [...prev[field]];
+        const arr = [...(prev[field] as string[])];
         arr[index] = value;
         return { ...prev, [field]: arr };
       }
-      return { ...prev, [field]: value };
+      return { ...prev, [field]: value as string };
     });
   };
 
+  // save to Firestore
   const handleSave = async () => {
-    const ref = doc(db, "predictions", god as string);
-    await setDoc(ref, formData, { merge: true });
-    alert("บันทึกสำเร็จ");
+    if (!god) return;
+    setLoading(true);
+    try {
+      const ref = doc(db, 'predictions', god);
+      await setDoc(ref, {
+        ...formData,
+        updatedAt: serverTimestamp(),
+      });
+      toast.success('บันทึกเลขเด็ดเรียบร้อยแล้ว');
+    } catch (err) {
+      console.error(err);
+      toast.error('เกิดข้อผิดพลาด');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="max-w-xl mx-auto p-6 bg-white rounded-xl shadow">
-      <h1 className="text-xl font-bold mb-4">แก้ไขตัวเลขของ {god}</h1>
+    <div className="max-w-xl mx-auto p-6 bg-white rounded-lg shadow">
+      <h1 className="text-xl font-bold mb-6">แก้ไขตัวเลขของ {god}</h1>
 
-      {/* วิ่งโดด + ยิงสำรอง */}
-      <label className="block mb-2">วิ่งโดดตัวเดียว</label>
-      <input
+      {/* วิ่งโดดตัวเดียว */}
+      <label className="block mb-1">วิ่งโดดตัวเดียว</label>
+      <Input
         value={formData.single}
-        onChange={(e) => handleChange("single", 0, e.target.value)}
-        className="w-full border p-2 rounded mb-4"
+        onChange={(e) => handleChange('single', 0, e.target.value)}
+        className="mb-4"
       />
 
-      <label className="block mb-2">ยิงเดี่ยวรอง</label>
-      <input
+      {/* ยิงเดี่ยวรอง */}
+      <label className="block mb-1">ยิงเดี่ยวรอง</label>
+      <Input
         value={formData.backup}
-        onChange={(e) => handleChange("backup", 0, e.target.value)}
-        className="w-full border p-2 rounded mb-4"
+        onChange={(e) => handleChange('backup', 0, e.target.value)}
+        className="mb-4"
       />
 
       {/* 2 ตัว */}
-      <label className="block mb-2">เลข 2 ตัว</label>
-      <div className="grid grid-cols-2 gap-2 mb-4">
-        {formData.double.map((v, i) => (
-          <input
+      <label className="block mb-1">เลข 2 ตัว</label>
+      <div className="flex gap-2 mb-4">
+        {formData.double.map((num, i) => (
+          <Input
             key={i}
-            value={v}
-            onChange={(e) => handleChange("double", i, e.target.value)}
-            className="border p-2 rounded"
+            value={num}
+            onChange={(e) => handleChange('double', i, e.target.value)}
           />
         ))}
       </div>
 
       {/* 3 ตัว */}
-      <label className="block mb-2">เลข 3 ตัว</label>
-      <div className="grid grid-cols-3 gap-2 mb-4">
-        {formData.triple.map((v, i) => (
-          <input
+      <label className="block mb-1">เลข 3 ตัว</label>
+      <div className="flex gap-2 mb-4">
+        {formData.triple.map((num, i) => (
+          <Input
             key={i}
-            value={v}
-            onChange={(e) => handleChange("triple", i, e.target.value)}
-            className="border p-2 rounded"
+            value={num}
+            onChange={(e) => handleChange('triple', i, e.target.value)}
           />
         ))}
       </div>
 
       {/* 4 ตัว */}
-      <label className="block mb-2">เลข 4 ตัว</label>
-      <div className="grid grid-cols-4 gap-2 mb-4">
-        {formData.quad.map((v, i) => (
-          <input
+      <label className="block mb-1">เลข 4 ตัว</label>
+      <div className="flex gap-2 mb-4">
+        {formData.quad.map((num, i) => (
+          <Input
             key={i}
-            value={v}
-            onChange={(e) => handleChange("quad", i, e.target.value)}
-            className="border p-2 rounded"
+            value={num}
+            onChange={(e) => handleChange('quad', i, e.target.value)}
           />
         ))}
       </div>
 
       {/* 5 ตัว */}
-      <label className="block mb-2">เลข 5 ตัว</label>
-      <div className="grid grid-cols-5 gap-2 mb-4">
-        {formData.penta.map((v, i) => (
-          <input
+      <label className="block mb-1">เลข 5 ตัว</label>
+      <div className="flex gap-2 mb-6">
+        {formData.penta.map((num, i) => (
+          <Input
             key={i}
-            value={v}
-            onChange={(e) => handleChange("penta", i, e.target.value)}
-            className="border p-2 rounded"
+            value={num}
+            onChange={(e) => handleChange('penta', i, e.target.value)}
           />
         ))}
       </div>
 
-      <button
-        onClick={handleSave}
-        className="w-full bg-teal-400 text-white py-2 rounded-lg"
-      >
-        บันทึก
-      </button>
+      <Button onClick={handleSave} disabled={loading} className="w-full">
+        {loading ? 'กำลังบันทึก...' : 'บันทึกเลขเด็ด'}
+      </Button>
     </div>
   );
 }
