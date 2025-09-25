@@ -1,6 +1,19 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import { db } from "@/lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
 import Image from "next/image";
+
+type PredictionForm = {
+  single: string;     // วิ่งโดดตัวเดียว
+  backup: string;     // ยิงเดี่ยวรอง
+  double: string[];   // 2 ตัวเป้า
+  triple: string[];   // 3 ตัววิน
+  quad: string[];     // 4 ตัวรับทรัพย์
+  penta: string[];    // 5 ตัวรวยไว
+};
 
 const deityNames: Record<string, { name: string; desc: string }> = {
   sroiboon: {
@@ -21,8 +34,30 @@ const deityNames: Record<string, { name: string; desc: string }> = {
   },
 };
 
-export default function DeityPage({ params }: { params: { god: string } }) {
-  const { god } = params;
+export default function DeityPage() {
+  const { god } = useParams<{ god: string }>();
+
+  const [formData, setFormData] = useState<PredictionForm>({
+    single: "",
+    backup: "",
+    double: ["", ""],
+    triple: ["", "", ""],
+    quad: ["", "", "", ""],
+    penta: ["", "", "", "", ""],
+  });
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!god) return;
+      const ref = doc(db, "predictions", god);
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        setFormData(snap.data() as PredictionForm);
+      }
+    };
+    fetchData();
+  }, [god]);
+
   const deity = deityNames[god] || { name: god, desc: "" };
 
   return (
@@ -42,22 +77,26 @@ export default function DeityPage({ params }: { params: { god: string } }) {
       {/* คำบรรยาย */}
       <p className="text-gray-300 mb-8">{deity.desc}</p>
 
-      {/* ช่องกรอกเลข */}
+      {/* ช่องแสดงเลข (read-only) */}
       <div className="w-full max-w-md space-y-6 text-yellow-400">
         {/* วิ่งโดดตัวเดียว */}
         <div>
           <label className="block mb-1">วิ่งโดดตัวเดียว</label>
           <input
             type="text"
+            value={formData.single}
+            readOnly
             className="w-full border p-2 rounded bg-white text-black text-center"
           />
         </div>
 
-        {/* ยิ่งเดี่ยวรอง */}
+        {/* ยิงเดี่ยวรอง */}
         <div>
           <label className="block mb-1">ยิ่งเดี่ยวรอง</label>
           <input
             type="text"
+            value={formData.backup}
+            readOnly
             className="w-full border p-2 rounded bg-white text-black text-center"
           />
         </div>
@@ -66,14 +105,15 @@ export default function DeityPage({ params }: { params: { god: string } }) {
         <div>
           <label className="block mb-1">2 ตัวเป้า</label>
           <div className="grid grid-cols-2 gap-2">
-            <input
-              type="text"
-              className="border p-2 rounded bg-white text-black text-center"
-            />
-            <input
-              type="text"
-              className="border p-2 rounded bg-white text-black text-center"
-            />
+            {formData.double.map((num, i) => (
+              <input
+                key={i}
+                type="text"
+                value={num}
+                readOnly
+                className="border p-2 rounded bg-white text-black text-center"
+              />
+            ))}
           </div>
         </div>
 
@@ -81,18 +121,15 @@ export default function DeityPage({ params }: { params: { god: string } }) {
         <div>
           <label className="block mb-1">3 ตัววิน</label>
           <div className="grid grid-cols-3 gap-2">
-            <input
-              type="text"
-              className="border p-2 rounded bg-white text-black text-center"
-            />
-            <input
-              type="text"
-              className="border p-2 rounded bg-white text-black text-center"
-            />
-            <input
-              type="text"
-              className="border p-2 rounded bg-white text-black text-center"
-            />
+            {formData.triple.map((num, i) => (
+              <input
+                key={i}
+                type="text"
+                value={num}
+                readOnly
+                className="border p-2 rounded bg-white text-black text-center"
+              />
+            ))}
           </div>
         </div>
 
@@ -100,22 +137,15 @@ export default function DeityPage({ params }: { params: { god: string } }) {
         <div>
           <label className="block mb-1">4 ตัวรับทรัพย์</label>
           <div className="grid grid-cols-4 gap-2">
-            <input
-              type="text"
-              className="border p-2 rounded bg-white text-black text-center"
-            />
-            <input
-              type="text"
-              className="border p-2 rounded bg-white text-black text-center"
-            />
-            <input
-              type="text"
-              className="border p-2 rounded bg-white text-black text-center"
-            />
-            <input
-              type="text"
-              className="border p-2 rounded bg-white text-black text-center"
-            />
+            {formData.quad.map((num, i) => (
+              <input
+                key={i}
+                type="text"
+                value={num}
+                readOnly
+                className="border p-2 rounded bg-white text-black text-center"
+              />
+            ))}
           </div>
         </div>
 
@@ -123,26 +153,15 @@ export default function DeityPage({ params }: { params: { god: string } }) {
         <div>
           <label className="block mb-1">5 ตัวรวยไว</label>
           <div className="grid grid-cols-5 gap-2">
-            <input
-              type="text"
-              className="border p-2 rounded bg-white text-black text-center"
-            />
-            <input
-              type="text"
-              className="border p-2 rounded bg-white text-black text-center"
-            />
-            <input
-              type="text"
-              className="border p-2 rounded bg-white text-black text-center"
-            />
-            <input
-              type="text"
-              className="border p-2 rounded bg-white text-black text-center"
-            />
-            <input
-              type="text"
-              className="border p-2 rounded bg-white text-black text-center"
-            />
+            {formData.penta.map((num, i) => (
+              <input
+                key={i}
+                type="text"
+                value={num}
+                readOnly
+                className="border p-2 rounded bg-white text-black text-center"
+              />
+            ))}
           </div>
         </div>
       </div>
