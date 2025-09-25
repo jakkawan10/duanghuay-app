@@ -16,7 +16,7 @@ export default function ManeewitchPage() {
   })
 
   useEffect(() => {
-    const ref = doc(db, 'maneewitch', getTodayKey())
+    const ref = doc(db, 'predictions', 'maneewitch', getTodayKey())
     const unsubscribe = onSnapshot(ref, (snap) => {
       if (snap.exists()) setData(snap.data() as typeof data)
     })

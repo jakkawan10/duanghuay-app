@@ -16,7 +16,7 @@ export default function UserPredictionPage() {
   })
 
   useEffect(() => {
-    const ref = doc(db, 'sroiboon', getTodayKey())
+    const ref = doc(db, 'predictions', 'sroiboon', getTodayKey())
     const unsubscribe = onSnapshot(ref, (snap) => {
       if (snap.exists()) setData(snap.data() as typeof data)
     })

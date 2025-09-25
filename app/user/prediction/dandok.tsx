@@ -16,7 +16,7 @@ export default function UserPredictionPage() {
   })
 
   useEffect(() => {
-    const ref = doc(db, 'dandok', getTodayKey())
+    const ref = doc(db, 'predictions', 'dandok', getTodayKey())
     const unsubscribe = onSnapshot(ref, (snap) => {
       if (snap.exists()) setData(snap.data() as typeof data)
     })
