@@ -3,35 +3,43 @@
 import { useState } from 'react'
 import { useParams } from 'next/navigation'
 import { db } from '@/lib/firebase'
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
+import { doc, setDoc, getDoc } from 'firebase/firestore'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
-type FormState = {
-  oneDigit: string
-  onePair: string
-  twoDigit: string[]
-  threeDigit: string[]
-  fourDigit: string[]
-  fiveDigit: string[]
+const defaultForm = {
+  oneDigit: '',
+  onePair: '',
+  twoDigit: ['', ''],
+  threeDigit: ['', '', ''],
+  fourDigit: ['', '', '', ''],
+  fiveDigit: ['', '', '', '', ''],
 }
 
 export default function AdminPredictionPage() {
   const { god } = useParams() as { god: string }
-  const [dateKey, setDateKey] = useState('') // YYYY-MM-DD
+  const [dateKey, setDateKey] = useState('') // Admin กรอกวันที่เอง เช่น 2025-09-25
+  const [form, setForm] = useState(defaultForm)
   const [loading, setLoading] = useState(false)
 
-  const [form, setForm] = useState<FormState>({
-    oneDigit: '',
-    onePair: '',
-    twoDigit: ['', ''],
-    threeDigit: ['', '', ''],
-    fourDigit: ['', '', '', ''],
-    fiveDigit: ['', '', '', '', ''],
-  })
+  // โหลดข้อมูลเก่ามาแก้ไข
+  const handleLoad = async () => {
+    if (!dateKey) return alert('กรุณากรอกวันที่ก่อน')
+    const ref = doc(db, 'predictions', god, 'dates', dateKey)
+    const snap = await getDoc(ref)
+    if (snap.exists()) {
+      setForm({
+        ...defaultForm,
+        ...snap.data(),
+      })
+    } else {
+      alert('ยังไม่มีข้อมูลสำหรับวันนี้')
+    }
+  }
 
+  // แก้ค่าช่อง input
   const handleChange = (
-    field: keyof FormState,
+    field: keyof typeof defaultForm,
     value: string,
     index?: number
   ) => {
@@ -40,110 +48,105 @@ export default function AdminPredictionPage() {
         const arr = [...(prev[field] as string[])]
         if (index !== undefined) arr[index] = value
         return { ...prev, [field]: arr }
-      } else {
-        return { ...prev, [field]: value }
       }
+      return { ...prev, [field]: value }
     })
   }
 
+  // Save ไป Firestore
   const handleSave = async () => {
-    if (!god) return alert('❌ ไม่มีค่า god')
-    if (!dateKey) return alert('❌ กรุณากรอกวันที่ (YYYY-MM-DD)')
-
+    if (!dateKey) return alert('กรุณากรอกวันที่ก่อน')
     setLoading(true)
     try {
       const ref = doc(db, 'predictions', god, 'dates', dateKey)
-      await setDoc(ref, {
-        ...form,
-        updatedAt: serverTimestamp(),
-      })
-      alert(`✅ บันทึกเลขของ ${god} วันที่ ${dateKey} แล้ว`)
+      await setDoc(ref, form, { merge: true })
+      alert('✅ บันทึกเรียบร้อย')
     } catch (e) {
       console.error(e)
-      alert('❌ เกิดข้อผิดพลาดในการบันทึก')
+      alert('❌ เกิดข้อผิดพลาด')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="max-w-xl mx-auto p-6 bg-white shadow rounded">
-      <h1 className="text-2xl font-bold mb-4">Admin: {god}</h1>
+    <div className="max-w-md mx-auto mt-10 p-4 border rounded-xl shadow">
+      <h1 className="text-2xl font-bold mb-4">Admin พิมพ์เลข ({god})</h1>
 
-      <label className="block mb-2 font-medium">วันที่ (YYYY-MM-DD)</label>
+      {/* วันที่ */}
+      <label className="block mb-2">วันที่ (เช่น 2025-09-25)</label>
       <Input
         value={dateKey}
         onChange={(e) => setDateKey(e.target.value)}
-        placeholder="2025-09-25"
+        placeholder="กรอกวันที่"
         className="mb-4"
       />
+      <Button onClick={handleLoad} className="mb-6">
+        โหลดข้อมูลเดิม
+      </Button>
 
       {/* oneDigit */}
-      <label className="block mb-2 font-medium">1 ตัวตรงตัวเดียว</label>
+      <label>1 ตัวตรงตัวเดียว</label>
       <Input
         value={form.oneDigit}
         onChange={(e) => handleChange('oneDigit', e.target.value)}
-        className="mb-4"
+        className="mb-2"
       />
 
       {/* onePair */}
-      <label className="block mb-2 font-medium">1 ตัวเด่นรอบ</label>
+      <label>1 ตัวเด่นรอบ</label>
       <Input
         value={form.onePair}
         onChange={(e) => handleChange('onePair', e.target.value)}
-        className="mb-4"
+        className="mb-2"
       />
 
       {/* twoDigit */}
-      <label className="block mb-2 font-medium">2 ตัวเป้า</label>
-      <div className="flex gap-2 mb-4">
-        {form.twoDigit.map((val, i) => (
-          <Input
-            key={i}
-            value={val}
-            onChange={(e) => handleChange('twoDigit', e.target.value, i)}
-          />
-        ))}
-      </div>
+      <label>2 ตัวเป้า</label>
+      {form.twoDigit.map((v, i) => (
+        <Input
+          key={i}
+          value={v}
+          onChange={(e) => handleChange('twoDigit', e.target.value, i)}
+          className="mb-2"
+        />
+      ))}
 
       {/* threeDigit */}
-      <label className="block mb-2 font-medium">3 ตัวแม่</label>
-      <div className="flex gap-2 mb-4">
-        {form.threeDigit.map((val, i) => (
-          <Input
-            key={i}
-            value={val}
-            onChange={(e) => handleChange('threeDigit', e.target.value, i)}
-          />
-        ))}
-      </div>
+      <label>3 ตัวแม่</label>
+      {form.threeDigit.map((v, i) => (
+        <Input
+          key={i}
+          value={v}
+          onChange={(e) => handleChange('threeDigit', e.target.value, i)}
+          className="mb-2"
+        />
+      ))}
 
       {/* fourDigit */}
-      <label className="block mb-2 font-medium">4 ตัวมหารวย</label>
-      <div className="flex gap-2 mb-4">
-        {form.fourDigit.map((val, i) => (
-          <Input
-            key={i}
-            value={val}
-            onChange={(e) => handleChange('fourDigit', e.target.value, i)}
-          />
-        ))}
-      </div>
+      <label>4 ตัวมหารวย</label>
+      {form.fourDigit.map((v, i) => (
+        <Input
+          key={i}
+          value={v}
+          onChange={(e) => handleChange('fourDigit', e.target.value, i)}
+          className="mb-2"
+        />
+      ))}
 
       {/* fiveDigit */}
-      <label className="block mb-2 font-medium">5 ตัวราชา</label>
-      <div className="flex gap-2 mb-4">
-        {form.fiveDigit.map((val, i) => (
-          <Input
-            key={i}
-            value={val}
-            onChange={(e) => handleChange('fiveDigit', e.target.value, i)}
-          />
-        ))}
-      </div>
+      <label>5 ตัวราชา</label>
+      {form.fiveDigit.map((v, i) => (
+        <Input
+          key={i}
+          value={v}
+          onChange={(e) => handleChange('fiveDigit', e.target.value, i)}
+          className="mb-2"
+        />
+      ))}
 
-      <Button onClick={handleSave} disabled={loading}>
-        {loading ? '💾 กำลังบันทึก...' : '✅ Save'}
+      <Button onClick={handleSave} disabled={loading} className="mt-4 w-full">
+        {loading ? '⏳ กำลังบันทึก...' : '💾 บันทึก'}
       </Button>
     </div>
   )

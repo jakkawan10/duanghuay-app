@@ -3,91 +3,53 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { db } from '@/lib/firebase'
-import { collection, getDocs, orderBy, query, limit } from 'firebase/firestore'
+import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore'
 
-type PredictionData = {
-  oneDigit: string
-  onePair: string
-  twoDigit: string
-  threeDigit: string
-  fourDigit: string
-  fiveDigit: string
-}
-
-const deityImages: Record<string, string> = {
-  sroiboon: '/images/sroiboon.png',
-  maneewitch: '/images/maneewitch.png',
-  intra: '/images/intra.png',
-  dandok: '/images/dandok.png',
-}
-
-export default function DeityPage() {
+export default function FortunePage() {
   const { god } = useParams() as { god: string }
-  const [data, setData] = useState<PredictionData | null>(null)
-  const [date, setDate] = useState('')
+  const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!god) return
-    const fetchLatest = async () => {
+    const fetchData = async () => {
       try {
-        const q = query(
-          collection(db, 'predictions', god, 'dates'),
-          orderBy('__name__', 'desc'), // ใช้ชื่อ doc (วันที่) เป็นตัว sort
-          limit(1)
-        )
+        // 👉 ไปที่ /predictions/{god}/dates/ เอา document ล่าสุด
+        const ref = collection(db, 'predictions', god, 'dates')
+        const q = query(ref, orderBy('__name__', 'desc'), limit(1))
         const snap = await getDocs(q)
+
         if (!snap.empty) {
-          const docSnap = snap.docs[0]
-          setDate(docSnap.id)
-          setData(docSnap.data() as PredictionData)
+          setData(snap.docs[0].data())
+        } else {
+          setData(null)
         }
       } catch (e) {
         console.error(e)
+        setData(null)
       } finally {
         setLoading(false)
       }
     }
-    fetchLatest()
+    fetchData()
   }, [god])
 
-  if (loading) return <p className="text-center mt-10">กำลังโหลด...</p>
-  if (!data) return <p className="text-center text-red-500 mt-10">❌ ไม่พบข้อมูล</p>
-
-  // helper render
-  const renderBoxes = (label: string, value: string) => (
-    <div className="mb-4">
-      <p className="font-semibold">{label}</p>
-      <div className="flex gap-2 mt-2">
-        {value.split('').map((digit, i) => (
-          <div
-            key={i}
-            className="w-10 h-10 flex items-center justify-center border rounded bg-gray-100 text-lg font-bold"
-          >
-            {digit}
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-
   return (
-    <div className="max-w-lg mx-auto p-4">
-      <h1 className="text-2xl font-bold text-center mb-4">📅 {date}</h1>
-      {deityImages[god] && (
-        <img
-          src={deityImages[god]}
-          alt={god}
-          className="w-full h-auto rounded mb-6"
-        />
-      )}
+    <div className="max-w-md mx-auto mt-10 p-4 border rounded-xl shadow">
+      <h1 className="text-2xl font-bold mb-4">📿 คำทำนายจาก {god}</h1>
 
-      {renderBoxes('วิ่งโดดตัวเดียว', data.oneDigit)}
-      {renderBoxes('ยิงเดี่ยวรอง', data.onePair)}
-      {renderBoxes('2 ตัวเป้า', data.twoDigit)}
-      {renderBoxes('3 ตัว', data.threeDigit)}
-      {renderBoxes('4 ตัว', data.fourDigit)}
-      {renderBoxes('5 ตัวรวยไว', data.fiveDigit)}
+      {loading && <p>⏳ กำลังโหลด...</p>}
+      {!loading && !data && <p className="text-red-500">❌ ไม่พบข้อมูล</p>}
+
+      {data && (
+        <div className="space-y-2">
+          <p>1 ตัวตรง: {data.oneDigit}</p>
+          <p>1 คู่: {data.onePair}</p>
+          <p>2 ตัว: {Array.isArray(data.twoDigit) ? data.twoDigit.join(', ') : data.twoDigit}</p>
+          <p>3 ตัว: {Array.isArray(data.threeDigit) ? data.threeDigit.join(', ') : data.threeDigit}</p>
+          <p>4 ตัว: {Array.isArray(data.fourDigit) ? data.fourDigit.join(', ') : data.fourDigit}</p>
+          <p>5 ตัว: {Array.isArray(data.fiveDigit) ? data.fiveDigit.join(', ') : data.fiveDigit}</p>
+        </div>
+      )}
     </div>
   )
 }
