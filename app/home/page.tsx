@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { db } from '@/lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '../../lib/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
