@@ -1,55 +1,74 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
-import { db } from '@/lib/firebase'
-import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore'
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import { db } from "@/lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
 
-export default function FortunePage() {
-  const { god } = useParams() as { god: string }
-  const [data, setData] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+interface PredictionData {
+  oneDigit?: string;
+  onePair?: string;
+  twoDigit?: string;
+  threeDigit?: string;
+  fourDigit?: string;
+  fiveDigit?: string;
+}
+
+export default function DeityPage() {
+  const { god } = useParams(); // เช่น sroiboon, maneewitch, intra, dandok
+  const [data, setData] = useState<PredictionData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // 📌 ให้ Admin เป็นคนกำหนดวันที่เองตอนกรอก
+  // ฝั่ง User เราจะ fix ไว้เป็น "ล่าสุดที่ Admin ใส่"
+  // ตอนนี้เพื่อความง่ายพี่กรอกวันที่เองตรงนี้ เช่น "2025-09-25"
+  const dateKey = "2025-09-25";
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // 👉 ไปที่ /predictions/{god}/dates/ เอา document ล่าสุด
-        const ref = collection(db, 'predictions', god, 'dates')
-        const q = query(ref, orderBy('__name__', 'desc'), limit(1))
-        const snap = await getDocs(q)
+        if (!god) return;
+        const ref = doc(db, "predictions", god as string, "dates", dateKey);
+        const snap = await getDoc(ref);
 
-        if (!snap.empty) {
-          setData(snap.docs[0].data())
+        if (snap.exists()) {
+          setData(snap.data() as PredictionData);
         } else {
-          setData(null)
+          setError("ไม่พบข้อมูล");
         }
-      } catch (e) {
-        console.error(e)
-        setData(null)
+      } catch (err: any) {
+        console.error(err);
+        setError("เกิดข้อผิดพลาดในการดึงข้อมูล");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
-    fetchData()
-  }, [god])
+    };
+
+    fetchData();
+  }, [god, dateKey]);
+
+  if (loading) return <p>⏳ กำลังโหลด...</p>;
+  if (error) return <p style={{ color: "red" }}>❌ {error}</p>;
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-4 border rounded-xl shadow">
-      <h1 className="text-2xl font-bold mb-4">📿 คำทำนายจาก {god}</h1>
+    <div className="p-6">
+      <h1 className="text-xl font-bold mb-4">
+        คำทำนายจาก {god}
+      </h1>
 
-      {loading && <p>⏳ กำลังโหลด...</p>}
-      {!loading && !data && <p className="text-red-500">❌ ไม่พบข้อมูล</p>}
-
-      {data && (
+      {data ? (
         <div className="space-y-2">
-          <p>1 ตัวตรง: {data.oneDigit}</p>
-          <p>1 คู่: {data.onePair}</p>
-          <p>2 ตัว: {Array.isArray(data.twoDigit) ? data.twoDigit.join(', ') : data.twoDigit}</p>
-          <p>3 ตัว: {Array.isArray(data.threeDigit) ? data.threeDigit.join(', ') : data.threeDigit}</p>
-          <p>4 ตัว: {Array.isArray(data.fourDigit) ? data.fourDigit.join(', ') : data.fourDigit}</p>
-          <p>5 ตัว: {Array.isArray(data.fiveDigit) ? data.fiveDigit.join(', ') : data.fiveDigit}</p>
+          <p>เลข 1 ตัว : {data.oneDigit || "-"}</p>
+          <p>เลขคู่ : {data.onePair || "-"}</p>
+          <p>เลข 2 ตัว : {data.twoDigit || "-"}</p>
+          <p>เลข 3 ตัว : {data.threeDigit || "-"}</p>
+          <p>เลข 4 ตัว : {data.fourDigit || "-"}</p>
+          <p>เลข 5 ตัว : {data.fiveDigit || "-"}</p>
         </div>
+      ) : (
+        <p>ไม่พบข้อมูล</p>
       )}
     </div>
-  )
+  );
 }
