@@ -7,12 +7,21 @@ import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
+type FormState = {
+  oneDigit: string
+  onePair: string
+  twoDigit: string[]
+  threeDigit: string[]
+  fourDigit: string[]
+  fiveDigit: string[]
+}
+
 export default function AdminPredictionPage() {
   const { god } = useParams() as { god: string }
   const [dateKey, setDateKey] = useState('') // YYYY-MM-DD
   const [loading, setLoading] = useState(false)
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<FormState>({
     oneDigit: '',
     onePair: '',
     twoDigit: ['', ''],
@@ -21,17 +30,20 @@ export default function AdminPredictionPage() {
     fiveDigit: ['', '', '', '', ''],
   })
 
-  const handleChange = (field: string, value: any, index?: number) => {
-    if (index !== undefined) {
-      setForm((prev) => ({
-        ...prev,
-        [field]: prev[field as keyof typeof form].map((v: string, i: number) =>
-          i === index ? value : v
-        ),
-      }))
-    } else {
-      setForm((prev) => ({ ...prev, [field]: value }))
-    }
+  const handleChange = (
+    field: keyof FormState,
+    value: string,
+    index?: number
+  ) => {
+    setForm((prev) => {
+      if (Array.isArray(prev[field])) {
+        const arr = [...(prev[field] as string[])]
+        if (index !== undefined) arr[index] = value
+        return { ...prev, [field]: arr }
+      } else {
+        return { ...prev, [field]: value }
+      }
+    })
   }
 
   const handleSave = async () => {
