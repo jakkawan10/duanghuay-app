@@ -17,7 +17,9 @@ const defaultData = {
 }
 
 export default function DeityPredictionPage() {
-  const { god } = useParams() as { god: string }
+  const params = useParams();
+  const god = params?.god as string;   // ✅ ดึงค่ามาแบบนี้ ปลอดภัยกว่า
+
   const [data, setData] = useState(defaultData)
   const [loading, setLoading] = useState(true)
 
@@ -30,8 +32,6 @@ export default function DeityPredictionPage() {
         const month = `${now.getMonth() + 1}`.padStart(2, '0')
         const year = now.getFullYear()
         const date = `${now.getDate()}`.padStart(2, '0')
-
-        // ใช้วันที่จริง เช่น 2025-09-25
         const roundKey = `${year}-${month}-${date}`
 
         const ref = doc(db, "predictions", god, "dates", roundKey)
