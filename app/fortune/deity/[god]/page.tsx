@@ -32,7 +32,8 @@ export default function DeityPredictionPage() {
         const year = now.getFullYear()
         const roundKey = `${year}-${month}-${day}`
 
-        const ref = doc(db, god, roundKey)
+        const ref = doc(db, "predictions", god, roundKey)
+
         const snap = await getDoc(ref)
         if (snap.exists()) {
           setData(snap.data() as typeof defaultData)
