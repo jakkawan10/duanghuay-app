@@ -189,7 +189,8 @@ export default function HomePage() {
       {/* Payment Modal */}
       {showPay && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-white w-full max-w-3xl rounded-2xl p-6">
+          <div className="bg-white w-full max-w-3xl rounded-2xl p-6 
+                          max-h-[90vh] overflow-y-auto">
             <h4 className="text-xl font-bold text-center mb-2">ปลดล็อกเทพเพิ่ม (อายุสิทธิ์ 1 เดือน)</h4>
             <p className="text-center text-gray-600 mb-6">
               ตอนนี้คุณปลดเพิ่มแล้ว {extraUsed} เทพ • แผนปัจจุบันรองรับ {slots} เทพ
