@@ -3,83 +3,94 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { db } from '@/lib/firebase'
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
+import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
-const defaultData = {
-  oneDigit: [""],
-  onePair: [""],
-  twoDigit: ["", ""],
-  threeDigit: ["", "", ""],
-  fourDigit: ["", "", "", ""],
-  fiveDigit: ["", "", "", "", ""],
-}
-
 export default function AdminPredictionPage() {
   const { god } = useParams() as { god: string }
-  const [form, setForm] = useState(defaultData)
-  const [roundKey, setRoundKey] = useState("") // ✅ ให้ admin กรอกเอง
+
+  // state
+  const [date, setDate] = useState('')
+  const [numbers, setNumbers] = useState({
+    oneDigit: '',
+    onePair: '',
+    twoDigit: ['', ''],
+    threeDigit: ['', '', ''],
+    fourDigit: ['', '', '', ''],
+    fiveDigit: ['', '', '', '', ''],
+  })
   const [loading, setLoading] = useState(false)
 
-  // โหลดข้อมูลงวดที่กรอก
-  const fetchCurrent = async () => {
-    if (!god || !roundKey) return
-    const ref = doc(db, "predictions", god, "dates", roundKey)
-    const snap = await getDoc(ref)
-    if (snap.exists()) {
-      setForm({
-        oneDigit: snap.data().oneDigit || [""],
-        onePair: snap.data().onePair || [""],
-        twoDigit: snap.data().twoDigit || ["", ""],
-        threeDigit: snap.data().threeDigit || ["", "", ""],
-        fourDigit: snap.data().fourDigit || ["", "", "", ""],
-        fiveDigit: snap.data().fiveDigit || ["", "", "", "", ""],
-      })
-    } else {
-      setForm(defaultData)
+  // โหลดข้อมูล (ถ้ามี)
+  useEffect(() => {
+    if (!god || !date) return
+
+    const fetchData = async () => {
+      const ref = doc(db, 'predictions', god, 'dates', date)
+      const snap = await getDoc(ref)
+      if (snap.exists()) {
+        setNumbers({
+          oneDigit: snap.data().oneDigit || '',
+          onePair: snap.data().onePair || '',
+          twoDigit: (snap.data().twoDigit || '').split(''),
+          threeDigit: (snap.data().threeDigit || '').split(''),
+          fourDigit: (snap.data().fourDigit || '').split(''),
+          fiveDigit: (snap.data().fiveDigit || '').split(''),
+        })
+      }
     }
-  }
+    fetchData()
+  }, [god, date])
 
-  const handleChange = (field: keyof typeof defaultData, index: number, value: string) => {
-    setForm((prev) => {
-      const updated = [...prev[field]]
-      updated[index] = value
-      return { ...prev, [field]: updated }
-    })
-  }
-
+  // ฟังก์ชันเซฟ
   const handleSave = async () => {
-    if (!god || !roundKey) return alert("⚠️ กรุณากรอกวันที่ก่อนบันทึก")
+    if (!god || !date) {
+      alert('กรุณากรอกวันที่ก่อน')
+      return
+    }
     setLoading(true)
-
     try {
-      const ref = doc(db, "predictions", god, "dates", roundKey)
+      const ref = doc(db, 'predictions', god, 'dates', date)
       await setDoc(ref, {
-        ...form,
-        updatedAt: serverTimestamp(),
+        oneDigit: numbers.oneDigit,
+        onePair: numbers.onePair,
+        twoDigit: numbers.twoDigit.join(''),
+        threeDigit: numbers.threeDigit.join(''),
+        fourDigit: numbers.fourDigit.join(''),
+        fiveDigit: numbers.fiveDigit.join(''),
+        updatedAt: new Date().toISOString(),
       })
-
-      alert(`✅ บันทึกเลขของ "${god}" สำหรับงวด ${roundKey} เรียบร้อยแล้ว`)
+      alert(`บันทึกข้อมูลของ ${god} วันที่ ${date} สำเร็จแล้ว`)
     } catch (e) {
       console.error(e)
-      alert("❌ เกิดข้อผิดพลาด")
+      alert('เกิดข้อผิดพลาด')
     } finally {
       setLoading(false)
     }
   }
 
-  const renderInputs = (field: keyof typeof defaultData, label: string) => (
-    <div>
-      <p className="mb-1 font-medium">{label}</p>
-      <div className="flex gap-2">
-        {form[field].map((val, i) => (
+  // helper สำหรับ render ช่อง input
+  const renderInputs = (label: string, key: keyof typeof numbers, count: number) => (
+    <div className="mb-4">
+      <label className="font-semibold">{label}</label>
+      <div className="flex gap-2 mt-2">
+        {Array.from({ length: count }).map((_, i) => (
           <Input
             key={i}
-            value={val}
-            onChange={(e) => handleChange(field, i, e.target.value)}
             className="w-12 text-center"
+            value={(numbers[key] as string[])[i] || ''}
             maxLength={1}
+            onChange={(e) => {
+              const val = e.target.value
+              setNumbers((prev) => {
+                const updated = { ...prev }
+                const arr = [...(updated[key] as string[])]
+                arr[i] = val
+                updated[key] = arr as any
+                return updated
+              })
+            }}
           />
         ))}
       </div>
@@ -87,33 +98,30 @@ export default function AdminPredictionPage() {
   )
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-4 border rounded-xl shadow space-y-4">
-      <h1 className="text-2xl font-bold mb-4">กรอกเลขสำหรับเทพ {god}</h1>
+    <div className="max-w-md mx-auto mt-6 p-4 border rounded-xl shadow">
+      <h1 className="text-2xl font-bold mb-4">Admin: {god}</h1>
 
-      <div>
-        <p className="mb-1 font-medium">📅 วันที่ (เช่น 2025-09-25)</p>
+      {/* กรอกวันที่ */}
+      <div className="mb-4">
+        <label className="font-semibold">วันที่ (YYYY-MM-DD)</label>
         <Input
-          value={roundKey}
-          onChange={(e) => setRoundKey(e.target.value)}
-          placeholder="YYYY-MM-DD"
-          className="mb-2"
+          type="text"
+          placeholder="2025-09-25"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
         />
-        <Button onClick={fetchCurrent} className="mb-4">🔍 โหลดเลขงวดนี้</Button>
       </div>
 
-      {renderInputs("oneDigit", "วิ่งโดดตัวเดียว")}
-      {renderInputs("onePair", "ยิงเดี่ยวรอง")}
-      {renderInputs("twoDigit", "2 ตัวเป้า")}
-      {renderInputs("threeDigit", "3 ตัวแม่")}
-      {renderInputs("fourDigit", "4 ตัวมหารวย")}
-      {renderInputs("fiveDigit", "5 ตัวรวยไว")}
+      {/* ฟิลด์ตัวเลข */}
+      {renderInputs('วิ่งโดดตัวเดียว', 'oneDigit', 1)}
+      {renderInputs('ยิงเดี่ยวรอง', 'onePair', 1)}
+      {renderInputs('2 ตัวเป้า', 'twoDigit', 2)}
+      {renderInputs('3 ตัวแม่สร้อยบุญ', 'threeDigit', 3)}
+      {renderInputs('4 ตัวขนทรัพย์', 'fourDigit', 4)}
+      {renderInputs('5 ตัวรวยไว', 'fiveDigit', 5)}
 
-      <Button
-        onClick={handleSave}
-        disabled={loading}
-        className="w-full mt-4 bg-yellow-500 hover:bg-yellow-600"
-      >
-        {loading ? "⏳ กำลังบันทึก..." : "💾 บันทึกเลข"}
+      <Button className="w-full mt-4" onClick={handleSave} disabled={loading}>
+        {loading ? 'กำลังบันทึก...' : 'บันทึก'}
       </Button>
     </div>
   )

@@ -3,51 +3,44 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { db } from '@/lib/firebase'
-import { doc, getDoc } from 'firebase/firestore'
-import Image from 'next/image'
-import Link from 'next/link'
+import { collection, getDocs, orderBy, query, limit } from 'firebase/firestore'
 
-// โครงสร้างข้อมูลเริ่มต้น
-const defaultData = {
-  oneDigit: [""],
-  onePair: [""],
-  twoDigit: ["", ""],
-  threeDigit: ["", "", ""],
-  fourDigit: ["", "", "", ""],
-  fiveDigit: ["", "", "", "", ""],
+type PredictionData = {
+  oneDigit: string
+  onePair: string
+  twoDigit: string
+  threeDigit: string
+  fourDigit: string
+  fiveDigit: string
 }
 
-export default function DeityPredictionPage() {
+const deityImages: Record<string, string> = {
+  sroiboon: '/images/sroiboon.png',
+  maneewitch: '/images/maneewitch.png',
+  intra: '/images/intra.png',
+  dandok: '/images/dandok.png',
+}
+
+export default function DeityPage() {
   const { god } = useParams() as { god: string }
-  const [data, setData] = useState(defaultData)
+  const [data, setData] = useState<PredictionData | null>(null)
+  const [date, setDate] = useState('')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!god) return
-
-    const loadData = async () => {
+    const fetchLatest = async () => {
       try {
-        const now = new Date()
-        const day = now.getDate().toString().padStart(2, "0")
-        const month = (now.getMonth() + 1).toString().padStart(2, "0")
-        const year = now.getFullYear()
-        const roundKey = `${year}-${month}-${day}`
-
-        const ref = doc(db, "predictions", god, "dates", roundKey)
-        const snap = await getDoc(ref)
-
-        if (snap.exists()) {
-          const snapData = snap.data()
-          setData({
-            oneDigit: snapData.oneDigit || [""],
-            onePair: snapData.onePair || [""],
-            twoDigit: snapData.twoDigit || ["", ""],
-            threeDigit: snapData.threeDigit || ["", "", ""],
-            fourDigit: snapData.fourDigit || ["", "", "", ""],
-            fiveDigit: snapData.fiveDigit || ["", "", "", "", ""],
-          })
-        } else {
-          setData(defaultData)
+        const q = query(
+          collection(db, 'predictions', god, 'dates'),
+          orderBy('__name__', 'desc'), // ใช้ชื่อ doc (วันที่) เป็นตัว sort
+          limit(1)
+        )
+        const snap = await getDocs(q)
+        if (!snap.empty) {
+          const docSnap = snap.docs[0]
+          setDate(docSnap.id)
+          setData(docSnap.data() as PredictionData)
         }
       } catch (e) {
         console.error(e)
@@ -55,146 +48,46 @@ export default function DeityPredictionPage() {
         setLoading(false)
       }
     }
-
-    loadData()
+    fetchLatest()
   }, [god])
 
-  if (loading) return <p className="text-center mt-10">⏳ กำลังโหลด...</p>
+  if (loading) return <p className="text-center mt-10">กำลังโหลด...</p>
+  if (!data) return <p className="text-center text-red-500 mt-10">❌ ไม่พบข้อมูล</p>
 
-  // ตรวจว่ามีข้อมูลจริงไหม
-  const hasData =
-    data.oneDigit.some((v) => v) ||
-    data.onePair.some((v) => v) ||
-    data.twoDigit.some((v) => v) ||
-    data.threeDigit.some((v) => v) ||
-    data.fourDigit.some((v) => v) ||
-    data.fiveDigit.some((v) => v)
-
-  if (!hasData) {
-    return <p className="text-center text-red-500 mt-10">❌ ไม่พบข้อมูล</p>
-  }
-
-  const now = new Date()
-  const day = now.getDate().toString().padStart(2, "0")
-  const month = (now.getMonth() + 1).toString().padStart(2, "0")
-  const year = now.getFullYear()
-  const roundKey = `${year}-${month}-${day}`
+  // helper render
+  const renderBoxes = (label: string, value: string) => (
+    <div className="mb-4">
+      <p className="font-semibold">{label}</p>
+      <div className="flex gap-2 mt-2">
+        {value.split('').map((digit, i) => (
+          <div
+            key={i}
+            className="w-10 h-10 flex items-center justify-center border rounded bg-gray-100 text-lg font-bold"
+          >
+            {digit}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 
   return (
-    <div className="bg-black text-white min-h-screen flex flex-col items-center justify-start pt-6 px-4">
-      <h1 className="text-2xl font-bold mb-2">เลขเด็ดงวด {roundKey}</h1>
+    <div className="max-w-lg mx-auto p-4">
+      <h1 className="text-2xl font-bold text-center mb-4">📅 {date}</h1>
+      {deityImages[god] && (
+        <img
+          src={deityImages[god]}
+          alt={god}
+          className="w-full h-auto rounded mb-6"
+        />
+      )}
 
-      <Image
-        src={`/images/${god}.png`}
-        alt={god}
-        width={300}
-        height={300}
-        className="mb-4 rounded-2xl shadow-lg"
-      />
-
-      <div className="bg-white text-black p-4 rounded-xl w-full max-w-md space-y-4">
-        {/* 1 ตัวตรงตัวเดียว */}
-        <div>
-          <p>วิ่งโดดตัวเดียว</p>
-          <div className="flex gap-2">
-            {data.oneDigit.map((val, i) => (
-              <input
-                key={i}
-                disabled
-                value={val}
-                className="w-12 bg-gray-100 text-center rounded p-2"
-                maxLength={1}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* 1 ตัวเด่นรอบ */}
-        <div>
-          <p>ยิงเดี่ยวรอง</p>
-          <div className="flex gap-2">
-            {data.onePair.map((val, i) => (
-              <input
-                key={i}
-                disabled
-                value={val}
-                className="w-12 bg-gray-100 text-center rounded p-2"
-                maxLength={1}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* 2 ตัวเป้า */}
-        <div>
-          <p>2 ตัวเป้า</p>
-          <div className="flex gap-2">
-            {data.twoDigit.map((val, i) => (
-              <input
-                key={i}
-                disabled
-                value={val}
-                className="w-12 bg-gray-100 text-center rounded p-2"
-                maxLength={1}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* 3 ตัวแม่ */}
-        <div>
-          <p>3 ตัวแม่</p>
-          <div className="flex gap-2">
-            {data.threeDigit.map((val, i) => (
-              <input
-                key={i}
-                disabled
-                value={val}
-                className="w-12 bg-gray-100 text-center rounded p-2"
-                maxLength={1}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* 4 ตัวมหารวย */}
-        <div>
-          <p>4 ตัวมหารวย</p>
-          <div className="flex gap-2">
-            {data.fourDigit.map((val, i) => (
-              <input
-                key={i}
-                disabled
-                value={val}
-                className="w-12 bg-gray-100 text-center rounded p-2"
-                maxLength={1}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* 5 ตัวรวยไว */}
-        <div>
-          <p>5 ตัวรวยไว</p>
-          <div className="flex gap-2">
-            {data.fiveDigit.map((val, i) => (
-              <input
-                key={i}
-                disabled
-                value={val}
-                className="w-12 bg-gray-100 text-center rounded p-2"
-                maxLength={1}
-              />
-            ))}
-          </div>
-        </div>
-
-        <Link href="/home">
-          <button className="bg-yellow-400 hover:bg-yellow-500 text-black rounded p-2 w-full mt-4">
-            🔮 กลับสู่หน้าเทพพาทายดวง
-          </button>
-        </Link>
-      </div>
+      {renderBoxes('วิ่งโดดตัวเดียว', data.oneDigit)}
+      {renderBoxes('ยิงเดี่ยวรอง', data.onePair)}
+      {renderBoxes('2 ตัวเป้า', data.twoDigit)}
+      {renderBoxes('3 ตัว', data.threeDigit)}
+      {renderBoxes('4 ตัว', data.fourDigit)}
+      {renderBoxes('5 ตัวรวยไว', data.fiveDigit)}
     </div>
   )
 }
