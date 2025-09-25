@@ -1,84 +1,97 @@
-// /app/home/page.tsx
-'use client'
+"use client";
 
-import { useRouter } from 'next/navigation'
-import { chooseDeity } from '@/app/actions/chooseDeity'
-import { useEffect, useState } from 'react'
-import { auth } from '@/lib/firebase'
-import { onAuthStateChanged } from 'firebase/auth'
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { auth, db } from "@/lib/firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
-const deities = [
-  { id: 'sroiboon', label: 'เจ้าแม่สร้อยบุญ', color: 'bg-pink-100' },
-  { id: 'maneewitch', label: 'เจ้ามณีเวทยมนต์', color: 'bg-blue-100' },
-  { id: 'intra', label: 'เจ้าองค์อินทร์แสนดี', color: 'bg-yellow-100' },
-  { id: 'dandok', label: 'เจ้าแม่ดานดอกษ์ศ์', color: 'bg-green-100' }
-]
-
-const adminEmail = "duyduy2521@gmail.com" // ✅ ใส่อีเมล Admin ที่มีสิทธิ์แก้เลข
+const gods = [
+  { id: "sroiboon", name: "เจ้าแม่สร้อยบุญ", color: "from-pink-200 to-pink-400" },
+  { id: "maneewitch", name: "เจ้ามณีเวทยมนต์", color: "from-yellow-200 to-yellow-400" },
+  { id: "intra", name: "เจ้าองค์อินทร์แสนดี", color: "from-blue-200 to-blue-400" },
+  { id: "dandok", name: "เจ้าแม่ดานดอกษ์ศ์", color: "from-green-200 to-green-400" },
+];
 
 export default function HomePage() {
-  const router = useRouter()
-  const [uid, setUid] = useState<string | null>(null)
-  const [email, setEmail] = useState<string | null>(null)
+  const router = useRouter();
+  const [selectedGod, setSelectedGod] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
+  // โหลดสิทธิ์จาก Firestore
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUid(user.uid)
-        setEmail(user.email)
+    const fetchSelection = async () => {
+      const user = auth.currentUser;
+      if (!user) {
+        setLoading(false);
+        return;
       }
-    })
-    return () => unsub()
-  }, [])
 
-  const handleChoose = async (id: string) => {
-    if (!uid) return alert('กรุณาเข้าสู่ระบบก่อนใช้งาน')
-    const ok = confirm(`ยืนยันเลือกเทพฟรี: ${id} ?`)
-    if (!ok) return
-    await chooseDeity(id)
-    router.push(`/fortune/deity/${id}`)
+      const ref = doc(db, "users", user.uid);
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        setSelectedGod(snap.data().selectedGod || null);
+      }
+      setLoading(false);
+    };
+    fetchSelection();
+  }, []);
+
+  const handleSelectGod = async (godId: string) => {
+    const user = auth.currentUser;
+    if (!user) {
+      alert("กรุณาเข้าสู่ระบบก่อน");
+      return;
+    }
+
+    if (!selectedGod) {
+      // ยังไม่เคยเลือก → บันทึก
+      await setDoc(doc(db, "users", user.uid), {
+        selectedGod: godId,
+        createdAt: new Date(),
+      });
+      setSelectedGod(godId);
+      router.push(`/fortune/deity/${godId}`);
+    } else if (selectedGod === godId) {
+      // เลือกซ้ำเทพเดิม → เข้าได้
+      router.push(`/fortune/deity/${godId}`);
+    } else {
+      // เลือกเทพใหม่ → ขึ้นเตือน
+      alert("คุณเลือกได้ฟรีเพียง 1 เทพ หากต้องการดูเทพเพิ่ม กรุณาสมัคร VIP");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center text-xl font-bold">
+        กำลังโหลด...
+      </div>
+    );
   }
 
   return (
-    <main className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4">
-      <p className="col-span-2 text-center text-md text-gray-600">
+    <div className="p-6 text-center">
+      <h2 className="mb-6 text-lg font-bold text-gray-800">
         คุณเลือกได้ฟรีเพียง 1 เทพ หากต้องการดูเทพเพิ่ม กรุณาสมัคร VIP
-      </p>
+      </h2>
 
-      {/* ฝั่ง User */}
-      {deities.map((deity) => (
-        <button
-          key={deity.id}
-          onClick={() => handleChoose(deity.id)}
-          className={`w-full p-5 rounded-xl shadow hover:scale-105 transition text-center ${deity.color}`}
-        >
-          🧘 {deity.label}
-        </button>
-      ))}
-      <button
-        onClick={() => router.push('/fortune/ai')}
-        className="bg-gradient-to-r from-yellow-400 to-red-400 w-full p-6 rounded-xl text-white font-bold text-center shadow"
-      >
-        🤖 เทพ AI เลขเด็ดสุดล้ำ
-      </button>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+        {gods.map((god) => (
+          <button
+            key={god.id}
+            onClick={() => handleSelectGod(god.id)}
+            className={`p-8 rounded-2xl shadow-lg bg-gradient-to-r ${god.color} 
+              text-xl font-semibold hover:scale-105 transition transform`}
+          >
+            {god.name}
+          </button>
+        ))}
+      </div>
 
-      {/* ฝั่ง Admin Zone */}
-      {email === adminEmail && (
-        <div className="col-span-2 mt-8">
-          <h2 className="text-center text-lg font-bold mb-3">🔑 Admin Zone</h2>
-          <div className="grid grid-cols-2 gap-3">
-            {deities.map((deity) => (
-              <button
-                key={deity.id}
-                onClick={() => router.push(`/admin/prediction/${deity.id}`)}
-                className="bg-gray-200 p-4 rounded-xl shadow hover:scale-105 transition"
-              >
-                ✏️ แก้เลข {deity.label}
-              </button>
-            ))}
-          </div>
-        </div>
+      {selectedGod && (
+        <p className="mt-6 text-green-700 font-medium">
+          ✅ คุณได้เลือก {gods.find((g) => g.id === selectedGod)?.name} แล้ว
+        </p>
       )}
-    </main>
-  )
+    </div>
+  );
 }
