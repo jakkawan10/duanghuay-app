@@ -57,10 +57,13 @@ export default function DeityPredictionPage() {
   }
 
   const now = new Date()
-  const day = now.getDate() < 16 ? '01' : '16'
   const month = `${now.getMonth() + 1}`.padStart(2, '0')
   const year = now.getFullYear()
-  const roundKey = `${year}-${month}-${day}`
+  const date = `${now.getDate()}`.padStart(2, '0')
+
+  // ใช้วันที่จริง เช่น 2025-09-25
+  const roundKey = `${year}-${month}-${date}`
+
 
   return (
     <div className="bg-black text-white min-h-screen flex flex-col items-center justify-start pt-6 px-4">
