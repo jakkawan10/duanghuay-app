@@ -1,107 +1,121 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { doc, setDoc } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { toast } from 'sonner'
+import { useState, useEffect } from 'react';
+import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 export default function AdminPredictionPage({ params }: { params: { god: string } }) {
-  const { god } = params
+  const deity = params.god;
+  const [solo, setSolo] = useState('');
+  const [singleBackup, setSingleBackup] = useState('');
+  const [double, setDouble] = useState(['', '']);
+  const [triple, setTriple] = useState(['', '', '']);
+  const [quad, setQuad] = useState(['', '', '', '']);
+  const [five, setFive] = useState(['', '', '', '', '']);
+  const [loading, setLoading] = useState(false);
 
-  // state ของช่องเลขแต่ละแบบ
-  const [oneDigit, setOneDigit] = useState('')
-  const [onePair, setOnePair] = useState('')
-  const [twoDigit, setTwoDigit] = useState(['', ''])
-  const [threeDigit, setThreeDigit] = useState(['', '', ''])
-  const [fourDigit, setFourDigit] = useState(['', '', '', ''])
-  const [fiveDigit, setFiveDigit] = useState(['', '', '', '', ''])
+  useEffect(() => {
+    const fetchData = async () => {
+      const snap = await getDoc(doc(db, 'predictions', deity));
+      if (snap.exists()) {
+        const data = snap.data();
+        setSolo(data.category?.solo || '');
+        setSingleBackup(data.category?.singleBackup || '');
+        setDouble(data.category?.double || ['', '']);
+        setTriple(data.category?.triple || ['', '', '']);
+        setQuad(data.category?.quad || ['', '', '', '']);
+        setFive(data.category?.five || ['', '', '', '', '']);
+      }
+    };
+    fetchData();
+  }, [deity]);
 
-  const [loading, setLoading] = useState(false)
-
-  const handleSave = async () => {
-    setLoading(true)
+  const handleSubmit = async () => {
+    setLoading(true);
     try {
       const payload = {
-        oneDigit,
-        onePair,
-        twoDigit: twoDigit.filter(Boolean),
-        threeDigit: threeDigit.filter(Boolean),
-        fourDigit: fourDigit.filter(Boolean),
-        fiveDigit: fiveDigit.filter(Boolean),
-      }
-      await setDoc(doc(db, 'predictions', god), payload)
-      toast.success('บันทึกสำเร็จแล้ว')
+        deity,
+        updatedAt: serverTimestamp(),
+        category: {
+          solo,
+          singleBackup,
+          double,
+          triple,
+          quad,
+          five,
+        },
+      };
+
+      await setDoc(doc(db, 'predictions', deity), payload);
+      toast.success('บันทึกเลขสำเร็จ');
     } catch (err) {
-      console.error(err)
-      toast.error('บันทึกไม่สำเร็จ')
+      console.error(err);
+      toast.error('เกิดข้อผิดพลาด');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="max-w-xl mx-auto p-6">
-      <h1 className="text-xl font-bold mb-4">แก้ไขตัวเลขของ {god}</h1>
+      <h1 className="text-xl font-bold mb-4">แก้ไขตัวเลขของ {deity}</h1>
 
-      <div className="mb-4">
-        <p>วิ่งโดดตัวเดียว</p>
-        <Input value={oneDigit} onChange={(e) => setOneDigit(e.target.value)} maxLength={1} />
+      <label>วิ่งโดดตัวเดียว</label>
+      <Input value={solo} onChange={e => setSolo(e.target.value)} className="mb-2" />
+
+      <label>ยิงเดี่ยวรอง</label>
+      <Input value={singleBackup} onChange={e => setSingleBackup(e.target.value)} className="mb-2" />
+
+      <label>เลข 2 ตัว</label>
+      <div className="flex gap-2 mb-2">
+        {double.map((v, i) => (
+          <Input key={i} value={v} onChange={e => {
+            const copy = [...double];
+            copy[i] = e.target.value;
+            setDouble(copy);
+          }} />
+        ))}
       </div>
 
-      <div className="mb-4">
-        <p>ยิงเดี่ยวรอง</p>
-        <Input value={onePair} onChange={(e) => setOnePair(e.target.value)} maxLength={1} />
+      <label>เลข 3 ตัว</label>
+      <div className="flex gap-2 mb-2">
+        {triple.map((v, i) => (
+          <Input key={i} value={v} onChange={e => {
+            const copy = [...triple];
+            copy[i] = e.target.value;
+            setTriple(copy);
+          }} />
+        ))}
       </div>
 
-      <div className="mb-4">
-        <p>เลข 2 ตัว</p>
-        <div className="flex gap-2">
-          {twoDigit.map((v, i) => (
-            <Input key={i} value={v} onChange={(e) => {
-              const arr = [...twoDigit]; arr[i] = e.target.value; setTwoDigit(arr)
-            }} maxLength={1} />
-          ))}
-        </div>
+      <label>เลข 4 ตัว</label>
+      <div className="flex gap-2 mb-2">
+        {quad.map((v, i) => (
+          <Input key={i} value={v} onChange={e => {
+            const copy = [...quad];
+            copy[i] = e.target.value;
+            setQuad(copy);
+          }} />
+        ))}
       </div>
 
-      <div className="mb-4">
-        <p>เลข 3 ตัว</p>
-        <div className="flex gap-2">
-          {threeDigit.map((v, i) => (
-            <Input key={i} value={v} onChange={(e) => {
-              const arr = [...threeDigit]; arr[i] = e.target.value; setThreeDigit(arr)
-            }} maxLength={1} />
-          ))}
-        </div>
+      <label>เลข 5 ตัว</label>
+      <div className="flex gap-2 mb-4">
+        {five.map((v, i) => (
+          <Input key={i} value={v} onChange={e => {
+            const copy = [...five];
+            copy[i] = e.target.value;
+            setFive(copy);
+          }} />
+        ))}
       </div>
 
-      <div className="mb-4">
-        <p>เลข 4 ตัว</p>
-        <div className="flex gap-2">
-          {fourDigit.map((v, i) => (
-            <Input key={i} value={v} onChange={(e) => {
-              const arr = [...fourDigit]; arr[i] = e.target.value; setFourDigit(arr)
-            }} maxLength={1} />
-          ))}
-        </div>
-      </div>
-
-      <div className="mb-4">
-        <p>เลข 5 ตัว</p>
-        <div className="flex gap-2">
-          {fiveDigit.map((v, i) => (
-            <Input key={i} value={v} onChange={(e) => {
-              const arr = [...fiveDigit]; arr[i] = e.target.value; setFiveDigit(arr)
-            }} maxLength={1} />
-          ))}
-        </div>
-      </div>
-
-      <Button disabled={loading} onClick={handleSave}>
+      <Button disabled={loading} onClick={handleSubmit}>
         {loading ? 'กำลังบันทึก...' : '✅ บันทึก'}
       </Button>
     </div>
-  )
+  );
 }
