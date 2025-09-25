@@ -30,10 +30,12 @@ const GODS = [
 
 const PRICING: Record<1 | 2 | 3, number> = { 1: 159, 2: 259, 3: 299 };
 const QR_IMAGES: Record<1 | 2 | 3, string> = {
-  1: "/qr/159.png",
-  2: "/qr/259.png",
-  3: "/qr/299.png",
+  1: "/qr-payment.jpg",
+  2: "/qr-payment.jpg",
+  3: "/qr-payment.jpg",
 };
+
+
 
 export default function HomePage() {
   const router = useRouter();
