@@ -7,19 +7,18 @@ import { doc, getDoc } from 'firebase/firestore'
 import Image from 'next/image'
 import Link from 'next/link'
 
+// โครงสร้างข้อมูลเริ่มต้น
 const defaultData = {
-  oneDigit: '',
-  onePair: '',
-  twoDigit: '',
-  threeDigit: '',
-  fourDigit: '',
-  fiveDigit: '',
+  oneDigit: [""],
+  onePair: [""],
+  twoDigit: ["", ""],
+  threeDigit: ["", "", ""],
+  fourDigit: ["", "", "", ""],
+  fiveDigit: ["", "", "", "", ""],
 }
 
 export default function DeityPredictionPage() {
-  const params = useParams();
-  const god = params?.god as string;   // ✅ ดึงค่ามาแบบนี้ ปลอดภัยกว่า
-
+  const { god } = useParams() as { god: string }
   const [data, setData] = useState(defaultData)
   const [loading, setLoading] = useState(true)
 
@@ -29,15 +28,24 @@ export default function DeityPredictionPage() {
     const loadData = async () => {
       try {
         const now = new Date()
-        const month = `${now.getMonth() + 1}`.padStart(2, '0')
+        const day = now.getDate().toString().padStart(2, "0")
+        const month = (now.getMonth() + 1).toString().padStart(2, "0")
         const year = now.getFullYear()
-        const date = `${now.getDate()}`.padStart(2, '0')
-        const roundKey = `${year}-${month}-${date}`
+        const roundKey = `${year}-${month}-${day}`
 
         const ref = doc(db, "predictions", god, "dates", roundKey)
         const snap = await getDoc(ref)
+
         if (snap.exists()) {
-          setData(snap.data() as typeof defaultData)
+          const snapData = snap.data()
+          setData({
+            oneDigit: snapData.oneDigit || [""],
+            onePair: snapData.onePair || [""],
+            twoDigit: snapData.twoDigit || ["", ""],
+            threeDigit: snapData.threeDigit || ["", "", ""],
+            fourDigit: snapData.fourDigit || ["", "", "", ""],
+            fiveDigit: snapData.fiveDigit || ["", "", "", "", ""],
+          })
         } else {
           setData(defaultData)
         }
@@ -53,15 +61,24 @@ export default function DeityPredictionPage() {
 
   if (loading) return <p className="text-center mt-10">⏳ กำลังโหลด...</p>
 
-  if (!data.oneDigit && !data.onePair) {
+  // ตรวจว่ามีข้อมูลจริงไหม
+  const hasData =
+    data.oneDigit.some((v) => v) ||
+    data.onePair.some((v) => v) ||
+    data.twoDigit.some((v) => v) ||
+    data.threeDigit.some((v) => v) ||
+    data.fourDigit.some((v) => v) ||
+    data.fiveDigit.some((v) => v)
+
+  if (!hasData) {
     return <p className="text-center text-red-500 mt-10">❌ ไม่พบข้อมูล</p>
   }
 
   const now = new Date()
-  const month = `${now.getMonth() + 1}`.padStart(2, '0')
+  const day = now.getDate().toString().padStart(2, "0")
+  const month = (now.getMonth() + 1).toString().padStart(2, "0")
   const year = now.getFullYear()
-  const date = `${now.getDate()}`.padStart(2, '0')
-  const roundKey = `${year}-${month}-${date}`
+  const roundKey = `${year}-${month}-${day}`
 
   return (
     <div className="bg-black text-white min-h-screen flex flex-col items-center justify-start pt-6 px-4">
@@ -72,30 +89,108 @@ export default function DeityPredictionPage() {
         alt={god}
         width={300}
         height={300}
-        className="mb-4"
+        className="mb-4 rounded-2xl shadow-lg"
       />
 
-      <div className="bg-white text-black p-4 rounded-xl w-full max-w-md">
-        <p>1 ตัวตรงตัวเดียว</p>
-        <input disabled value={data.oneDigit} className="w-full bg-gray-100 rounded p-2 mb-2" />
+      <div className="bg-white text-black p-4 rounded-xl w-full max-w-md space-y-4">
+        {/* 1 ตัวตรงตัวเดียว */}
+        <div>
+          <p>วิ่งโดดตัวเดียว</p>
+          <div className="flex gap-2">
+            {data.oneDigit.map((val, i) => (
+              <input
+                key={i}
+                disabled
+                value={val}
+                className="w-12 bg-gray-100 text-center rounded p-2"
+                maxLength={1}
+              />
+            ))}
+          </div>
+        </div>
 
-        <p>1 ตัวเด่นรอบ</p>
-        <input disabled value={data.onePair} className="w-full bg-gray-100 rounded p-2 mb-2" />
+        {/* 1 ตัวเด่นรอบ */}
+        <div>
+          <p>ยิงเดี่ยวรอง</p>
+          <div className="flex gap-2">
+            {data.onePair.map((val, i) => (
+              <input
+                key={i}
+                disabled
+                value={val}
+                className="w-12 bg-gray-100 text-center rounded p-2"
+                maxLength={1}
+              />
+            ))}
+          </div>
+        </div>
 
-        <p>2 ตัวเป้า</p>
-        <input disabled value={data.twoDigit} className="w-full bg-gray-100 rounded p-2 mb-2" />
+        {/* 2 ตัวเป้า */}
+        <div>
+          <p>2 ตัวเป้า</p>
+          <div className="flex gap-2">
+            {data.twoDigit.map((val, i) => (
+              <input
+                key={i}
+                disabled
+                value={val}
+                className="w-12 bg-gray-100 text-center rounded p-2"
+                maxLength={1}
+              />
+            ))}
+          </div>
+        </div>
 
-        <p>3 ตัวแม่</p>
-        <input disabled value={data.threeDigit} className="w-full bg-gray-100 rounded p-2 mb-2" />
+        {/* 3 ตัวแม่ */}
+        <div>
+          <p>3 ตัวแม่</p>
+          <div className="flex gap-2">
+            {data.threeDigit.map((val, i) => (
+              <input
+                key={i}
+                disabled
+                value={val}
+                className="w-12 bg-gray-100 text-center rounded p-2"
+                maxLength={1}
+              />
+            ))}
+          </div>
+        </div>
 
-        <p>4 ตัวมหารวย</p>
-        <input disabled value={data.fourDigit} className="w-full bg-gray-100 rounded p-2 mb-2" />
+        {/* 4 ตัวมหารวย */}
+        <div>
+          <p>4 ตัวมหารวย</p>
+          <div className="flex gap-2">
+            {data.fourDigit.map((val, i) => (
+              <input
+                key={i}
+                disabled
+                value={val}
+                className="w-12 bg-gray-100 text-center rounded p-2"
+                maxLength={1}
+              />
+            ))}
+          </div>
+        </div>
 
-        <p>5 ตัวราชา</p>
-        <input disabled value={data.fiveDigit} className="w-full bg-gray-100 rounded p-2 mb-4" />
+        {/* 5 ตัวรวยไว */}
+        <div>
+          <p>5 ตัวรวยไว</p>
+          <div className="flex gap-2">
+            {data.fiveDigit.map((val, i) => (
+              <input
+                key={i}
+                disabled
+                value={val}
+                className="w-12 bg-gray-100 text-center rounded p-2"
+                maxLength={1}
+              />
+            ))}
+          </div>
+        </div>
 
         <Link href="/home">
-          <button className="bg-yellow-400 hover:bg-yellow-500 text-black rounded p-2 w-full mt-2">
+          <button className="bg-yellow-400 hover:bg-yellow-500 text-black rounded p-2 w-full mt-4">
             🔮 กลับสู่หน้าเทพพาทายดวง
           </button>
         </Link>
