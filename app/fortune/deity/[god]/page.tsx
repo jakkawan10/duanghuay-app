@@ -1,38 +1,52 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { doc, getDoc } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
+import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import Image from "next/image";
 
-export default function DeityPage({ params }: { params: { god: string } }) {
-  const { god } = params
-  const [data, setData] = useState<any>(null)
+export default function DeityFortunePage() {
+  const { god } = useParams();
+  const [data, setData] = useState<any>(null);
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const snap = await getDoc(doc(db, 'predictions', god))
-        if (snap.exists()) setData(snap.data())
-      } catch (err) {
-        console.error(err)
-      }
-    }
-    load()
-  }, [god])
+    const fetchData = async () => {
+      const ref = doc(db, "predictions", god as string);
+      const snap = await getDoc(ref);
+      if (snap.exists()) setData(snap.data());
+    };
+    fetchData();
+  }, [god]);
 
-  if (!data) return <p className="text-center text-red-500">❌ ไม่พบข้อมูล</p>
+  if (!data) {
+    return <p className="text-center text-red-500 mt-10">❌ ไม่พบข้อมูล</p>;
+  }
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <h1 className="text-xl font-bold mb-4">คำทำนายจาก {god}</h1>
-      <img src={`/images/${god}.png`} alt={god} className="mx-auto mb-4 w-60 rounded-xl shadow" />
+    <div className="max-w-2xl mx-auto p-6 text-center">
+      {/* รูปเทพ */}
+      <Image
+        src={`/images/${god}.png`}
+        alt={god as string}
+        width={300}
+        height={300}
+        className="mx-auto mb-6"
+      />
 
-      <p>วิ่งโดดตัวเดียว: {data.oneDigit}</p>
-      <p>ยิงเดี่ยวรอง: {data.onePair}</p>
-      <p>2 ตัวเป้า: {data.twoDigit?.join(' / ')}</p>
-      <p>3 ตัว: {data.threeDigit?.join(' / ')}</p>
-      <p>4 ตัว: {data.fourDigit?.join(' / ')}</p>
-      <p>5 ตัว: {data.fiveDigit?.join(' / ')}</p>
+      <h1 className="text-2xl font-bold mb-6">เลขเด็ดงวดนี้</h1>
+
+      <p className="mb-2">วิ่งโดดตัวเดียว: <b>{data.single}</b></p>
+      <p className="mb-4">ยิงเดี่ยวรอง: <b>{data.backup}</b></p>
+
+      <p className="mb-2">2 ตัว: {data.double?.join(" , ")}</p>
+      <p className="mb-2">3 ตัว: {data.triple?.join(" , ")}</p>
+      <p className="mb-2">4 ตัว: {data.quad?.join(" , ")}</p>
+      <p className="mb-2">5 ตัว: {data.penta?.join(" , ")}</p>
+
+      <button className="mt-6 bg-teal-400 text-white py-2 px-6 rounded-lg">
+        เข้าดูดวงได้ที่ เทพAI
+      </button>
     </div>
-  )
+  );
 }

@@ -1,121 +1,126 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
-export default function AdminPredictionPage({ params }: { params: { god: string } }) {
-  const deity = params.god;
-  const [solo, setSolo] = useState('');
-  const [singleBackup, setSingleBackup] = useState('');
-  const [double, setDouble] = useState(['', '']);
-  const [triple, setTriple] = useState(['', '', '']);
-  const [quad, setQuad] = useState(['', '', '', '']);
-  const [five, setFive] = useState(['', '', '', '', '']);
-  const [loading, setLoading] = useState(false);
+export default function AdminPredictionPage() {
+  const { god } = useParams();
+  const [formData, setFormData] = useState({
+    single: "",
+    backup: "",
+    double: ["", ""],
+    triple: ["", "", ""],
+    quad: ["", "", "", ""],
+    penta: ["", "", "", "", ""],
+  });
 
   useEffect(() => {
     const fetchData = async () => {
-      const snap = await getDoc(doc(db, 'predictions', deity));
+      const ref = doc(db, "predictions", god as string);
+      const snap = await getDoc(ref);
       if (snap.exists()) {
-        const data = snap.data();
-        setSolo(data.category?.solo || '');
-        setSingleBackup(data.category?.singleBackup || '');
-        setDouble(data.category?.double || ['', '']);
-        setTriple(data.category?.triple || ['', '', '']);
-        setQuad(data.category?.quad || ['', '', '', '']);
-        setFive(data.category?.five || ['', '', '', '', '']);
+        setFormData(snap.data() as any);
       }
     };
     fetchData();
-  }, [deity]);
+  }, [god]);
 
-  const handleSubmit = async () => {
-    setLoading(true);
-    try {
-      const payload = {
-        deity,
-        updatedAt: serverTimestamp(),
-        category: {
-          solo,
-          singleBackup,
-          double,
-          triple,
-          quad,
-          five,
-        },
-      };
+  const handleChange = (field: string, index: number, value: string) => {
+    setFormData((prev) => {
+      if (Array.isArray(prev[field])) {
+        const arr = [...prev[field]];
+        arr[index] = value;
+        return { ...prev, [field]: arr };
+      }
+      return { ...prev, [field]: value };
+    });
+  };
 
-      await setDoc(doc(db, 'predictions', deity), payload);
-      toast.success('บันทึกเลขสำเร็จ');
-    } catch (err) {
-      console.error(err);
-      toast.error('เกิดข้อผิดพลาด');
-    } finally {
-      setLoading(false);
-    }
+  const handleSave = async () => {
+    const ref = doc(db, "predictions", god as string);
+    await setDoc(ref, formData, { merge: true });
+    alert("บันทึกสำเร็จ");
   };
 
   return (
-    <div className="max-w-xl mx-auto p-6">
-      <h1 className="text-xl font-bold mb-4">แก้ไขตัวเลขของ {deity}</h1>
+    <div className="max-w-xl mx-auto p-6 bg-white rounded-xl shadow">
+      <h1 className="text-xl font-bold mb-4">แก้ไขตัวเลขของ {god}</h1>
 
-      <label>วิ่งโดดตัวเดียว</label>
-      <Input value={solo} onChange={e => setSolo(e.target.value)} className="mb-2" />
+      {/* วิ่งโดด + ยิงสำรอง */}
+      <label className="block mb-2">วิ่งโดดตัวเดียว</label>
+      <input
+        value={formData.single}
+        onChange={(e) => handleChange("single", 0, e.target.value)}
+        className="w-full border p-2 rounded mb-4"
+      />
 
-      <label>ยิงเดี่ยวรอง</label>
-      <Input value={singleBackup} onChange={e => setSingleBackup(e.target.value)} className="mb-2" />
+      <label className="block mb-2">ยิงเดี่ยวรอง</label>
+      <input
+        value={formData.backup}
+        onChange={(e) => handleChange("backup", 0, e.target.value)}
+        className="w-full border p-2 rounded mb-4"
+      />
 
-      <label>เลข 2 ตัว</label>
-      <div className="flex gap-2 mb-2">
-        {double.map((v, i) => (
-          <Input key={i} value={v} onChange={e => {
-            const copy = [...double];
-            copy[i] = e.target.value;
-            setDouble(copy);
-          }} />
+      {/* 2 ตัว */}
+      <label className="block mb-2">เลข 2 ตัว</label>
+      <div className="grid grid-cols-2 gap-2 mb-4">
+        {formData.double.map((v, i) => (
+          <input
+            key={i}
+            value={v}
+            onChange={(e) => handleChange("double", i, e.target.value)}
+            className="border p-2 rounded"
+          />
         ))}
       </div>
 
-      <label>เลข 3 ตัว</label>
-      <div className="flex gap-2 mb-2">
-        {triple.map((v, i) => (
-          <Input key={i} value={v} onChange={e => {
-            const copy = [...triple];
-            copy[i] = e.target.value;
-            setTriple(copy);
-          }} />
+      {/* 3 ตัว */}
+      <label className="block mb-2">เลข 3 ตัว</label>
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        {formData.triple.map((v, i) => (
+          <input
+            key={i}
+            value={v}
+            onChange={(e) => handleChange("triple", i, e.target.value)}
+            className="border p-2 rounded"
+          />
         ))}
       </div>
 
-      <label>เลข 4 ตัว</label>
-      <div className="flex gap-2 mb-2">
-        {quad.map((v, i) => (
-          <Input key={i} value={v} onChange={e => {
-            const copy = [...quad];
-            copy[i] = e.target.value;
-            setQuad(copy);
-          }} />
+      {/* 4 ตัว */}
+      <label className="block mb-2">เลข 4 ตัว</label>
+      <div className="grid grid-cols-4 gap-2 mb-4">
+        {formData.quad.map((v, i) => (
+          <input
+            key={i}
+            value={v}
+            onChange={(e) => handleChange("quad", i, e.target.value)}
+            className="border p-2 rounded"
+          />
         ))}
       </div>
 
-      <label>เลข 5 ตัว</label>
-      <div className="flex gap-2 mb-4">
-        {five.map((v, i) => (
-          <Input key={i} value={v} onChange={e => {
-            const copy = [...five];
-            copy[i] = e.target.value;
-            setFive(copy);
-          }} />
+      {/* 5 ตัว */}
+      <label className="block mb-2">เลข 5 ตัว</label>
+      <div className="grid grid-cols-5 gap-2 mb-4">
+        {formData.penta.map((v, i) => (
+          <input
+            key={i}
+            value={v}
+            onChange={(e) => handleChange("penta", i, e.target.value)}
+            className="border p-2 rounded"
+          />
         ))}
       </div>
 
-      <Button disabled={loading} onClick={handleSubmit}>
-        {loading ? 'กำลังบันทึก...' : '✅ บันทึก'}
-      </Button>
+      <button
+        onClick={handleSave}
+        className="w-full bg-teal-400 text-white py-2 rounded-lg"
+      >
+        บันทึก
+      </button>
     </div>
   );
 }
