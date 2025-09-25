@@ -1,43 +1,35 @@
 'use client'
 
 import { useState } from 'react'
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
+import { doc, setDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 
-type NumbersArray = string[]
-
-const defaultData = {
-  solo: '',
-  singleBackup: '',
-  double: ['', ''],
-  triple: ['', '', ''],
-  quad: ['', '', '', ''],
-  five: ['', '', '', '', ''],
-}
-
-export default function AdminPage({ params }: { params: { god: string } }) {
+export default function AdminPredictionPage({ params }: { params: { god: string } }) {
   const { god } = params
-  const [form, setForm] = useState(defaultData)
+  const [oneDigit, setOneDigit] = useState('')
+  const [onePair, setOnePair] = useState('')
+  const [twoDigit, setTwoDigit] = useState(['', ''])
+  const [threeDigit, setThreeDigit] = useState(['', '', ''])
+  const [fourDigit, setFourDigit] = useState(['', '', '', ''])
+  const [fiveDigit, setFiveDigit] = useState(['', '', '', '', ''])
   const [loading, setLoading] = useState(false)
 
-  const handleChangeArray = (field: keyof typeof form, index: number, value: string) => {
-    const arr = [...(form[field] as NumbersArray)]
-    arr[index] = value
-    setForm((prev) => ({ ...prev, [field]: arr }))
-  }
-
-  const handleSubmit = async () => {
+  const handleSave = async () => {
     setLoading(true)
     try {
       const payload = {
-        ...form,
-        updatedAt: serverTimestamp(),
+        oneDigit,
+        onePair,
+        twoDigit: twoDigit.filter(Boolean),
+        threeDigit: threeDigit.filter(Boolean),
+        fourDigit: fourDigit.filter(Boolean),
+        fiveDigit: fiveDigit.filter(Boolean),
       }
       await setDoc(doc(db, 'predictions', god), payload)
-      toast.success(`บันทึกเลขของ ${god} สำเร็จแล้ว`)
+      toast.success('บันทึกสำเร็จ')
     } catch (err) {
       console.error(err)
       toast.error('เกิดข้อผิดพลาด')
@@ -47,54 +39,50 @@ export default function AdminPage({ params }: { params: { god: string } }) {
   }
 
   return (
-    <div className="max-w-xl mx-auto p-6 space-y-4">
-      <h1 className="text-xl font-bold mb-4">🧙‍♂️ แก้ไขตัวเลขของ {god}</h1>
+    <div className="max-w-xl mx-auto p-6">
+      <h1 className="text-xl font-bold mb-4">แก้ไขตัวเลขของ {god}</h1>
 
-      <Input
-        placeholder="วิ่งโดดตัวเดียว"
-        value={form.solo}
-        onChange={(e) => setForm({ ...form, solo: e.target.value })}
-      />
-      <Input
-        placeholder="ยิงเดี่ยวรอง"
-        value={form.singleBackup}
-        onChange={(e) => setForm({ ...form, singleBackup: e.target.value })}
-      />
+      <Input placeholder="วิ่งโดดตัวเดียว" value={oneDigit} onChange={(e) => setOneDigit(e.target.value)} className="mb-2" />
+      <Input placeholder="ยิงเดี่ยวรอง" value={onePair} onChange={(e) => setOnePair(e.target.value)} className="mb-2" />
 
-      {/* Double */}
-      <label>เลข 2 ตัว</label>
-      <div className="grid grid-cols-2 gap-2">
-        {form.double.map((val, i) => (
-          <Input key={i} value={val} onChange={(e) => handleChangeArray('double', i, e.target.value)} />
+      <div className="mb-2">
+        <p>เลข 2 ตัว</p>
+        {twoDigit.map((v, i) => (
+          <Input key={i} value={v} onChange={(e) => {
+            const arr = [...twoDigit]; arr[i] = e.target.value; setTwoDigit(arr)
+          }} className="mb-1" />
         ))}
       </div>
 
-      {/* Triple */}
-      <label>เลข 3 ตัว</label>
-      <div className="grid grid-cols-3 gap-2">
-        {form.triple.map((val, i) => (
-          <Input key={i} value={val} onChange={(e) => handleChangeArray('triple', i, e.target.value)} />
+      <div className="mb-2">
+        <p>เลข 3 ตัว</p>
+        {threeDigit.map((v, i) => (
+          <Input key={i} value={v} onChange={(e) => {
+            const arr = [...threeDigit]; arr[i] = e.target.value; setThreeDigit(arr)
+          }} className="mb-1" />
         ))}
       </div>
 
-      {/* Quad */}
-      <label>เลข 4 ตัว</label>
-      <div className="grid grid-cols-4 gap-2">
-        {form.quad.map((val, i) => (
-          <Input key={i} value={val} onChange={(e) => handleChangeArray('quad', i, e.target.value)} />
+      <div className="mb-2">
+        <p>เลข 4 ตัว</p>
+        {fourDigit.map((v, i) => (
+          <Input key={i} value={v} onChange={(e) => {
+            const arr = [...fourDigit]; arr[i] = e.target.value; setFourDigit(arr)
+          }} className="mb-1" />
         ))}
       </div>
 
-      {/* Five */}
-      <label>เลข 5 ตัว</label>
-      <div className="grid grid-cols-5 gap-2">
-        {form.five.map((val, i) => (
-          <Input key={i} value={val} onChange={(e) => handleChangeArray('five', i, e.target.value)} />
+      <div className="mb-2">
+        <p>เลข 5 ตัว</p>
+        {fiveDigit.map((v, i) => (
+          <Input key={i} value={v} onChange={(e) => {
+            const arr = [...fiveDigit]; arr[i] = e.target.value; setFiveDigit(arr)
+          }} className="mb-1" />
         ))}
       </div>
 
-      <Button disabled={loading} onClick={handleSubmit} className="w-full">
-        {loading ? 'กำลังบันทึก...' : '✅ บันทึกเลข'}
+      <Button disabled={loading} onClick={handleSave}>
+        {loading ? 'กำลังบันทึก...' : '✅ บันทึก'}
       </Button>
     </div>
   )
