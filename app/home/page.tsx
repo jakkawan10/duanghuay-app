@@ -80,7 +80,8 @@ export default function HomePage() {
 
   const handleSelectGod = async (godId: string) => {
     if (!user) {
-      alert("กรุณาเข้าสู่ระบบก่อน");
+      // ไป login ทันที ไม่ต้อง alert
+      router.push("/login");
       return;
     }
     if (!udoc) return;
@@ -114,10 +115,11 @@ export default function HomePage() {
       return;
     }
 
-    // 4) ไม่มีสิทธิ์เหลือ → เปิดหน้าชำระเงินตาม "tier" (จำนวนเทพที่ต้องการปลด)
+    // 4) ไม่มีสิทธิ์เหลือ → เปิดหน้าชำระเงิน
     setPendingGod(godId);
     setShowPay(true);
   };
+
 
   // tier ที่แนะนำให้พอสำหรับ "ปลดเพิ่ม 1 เทพ" จากสถานะปัจจุบัน
   const recommendedTier: 1 | 2 | 3 = useMemo(() => {
