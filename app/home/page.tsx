@@ -174,19 +174,24 @@ export default function HomePage() {
         ))}
       </div>
 
-      {/* Admin Zone (คง UI เดิมไว้ให้พี่) */}
-      <h3 className="text-center font-bold mb-4">🔑 Admin Zone</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {GODS.map((g) => (
-          <button
-            key={g.id}
-            onClick={() => router.push(`/admin/prediction/${g.id}`)}
-            className="p-5 rounded-lg border bg-gray-50 hover:bg-gray-100 text-left"
-          >
-            ✏️ แก้เลข {g.name}
-          </button>
-        ))}
-      </div>
+      {/* Admin Zone: แสดงเฉพาะ admin */}
+      {udoc?.role === "admin" && (
+        <>
+          <h3 className="text-center font-bold mb-4">🔑 Admin Zone</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {GODS.map((g) => (
+              <button
+                key={g.id}
+                onClick={() => router.push(`/admin/prediction/${g.id}`)}
+                className="p-5 rounded-lg border bg-gray-50 hover:bg-gray-100 text-left"
+              >
+                ✏️ แก้เลข {g.name}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
 
       {/* Payment Modal */}
       {showPay && (
