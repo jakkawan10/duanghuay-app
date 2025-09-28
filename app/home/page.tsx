@@ -19,6 +19,7 @@ type UserDoc = {
   paidGods?: string[];       // เทพที่ปลดล็อกแล้ว
   planTier?: 0 | 1 | 2 | 3;  // จำนวนเทพที่อนุญาตให้ปลดล็อกเพิ่ม (1/2/3)
   expireAt?: Timestamp;      // วันหมดอายุสิทธิ์
+  role?: string;             // บทบาท เช่น "admin" หรือ "user"
 };
 
 const GODS = [
@@ -34,8 +35,6 @@ const QR_IMAGES: Record<1 | 2 | 3, string> = {
   2: "/qr-payment.jpg",
   3: "/qr-payment.jpg",
 };
-
-
 
 export default function HomePage() {
   const router = useRouter();
@@ -63,11 +62,12 @@ export default function HomePage() {
           paidGods: d.paidGods ?? [],
           planTier: (d.planTier ?? 0) as 0 | 1 | 2 | 3,
           expireAt: d.expireAt,
+          role: d.role ?? undefined,
         });
       } else {
         // สร้างเอกสารเปล่าไว้ก่อน
         await setDoc(ref, { planTier: 0, paidGods: [] }, { merge: true });
-        setUdoc({ selectedGod: undefined, paidGods: [], planTier: 0 });
+        setUdoc({ selectedGod: undefined, paidGods: [], planTier: 0, role: "user" });
       }
       setLoading(false);
     };
@@ -119,7 +119,6 @@ export default function HomePage() {
     setPendingGod(godId);
     setShowPay(true);
   };
-
 
   // tier ที่แนะนำให้พอสำหรับ "ปลดเพิ่ม 1 เทพ" จากสถานะปัจจุบัน
   const recommendedTier: 1 | 2 | 3 = useMemo(() => {
@@ -191,7 +190,6 @@ export default function HomePage() {
           </div>
         </>
       )}
-
 
       {/* Payment Modal */}
       {showPay && (
