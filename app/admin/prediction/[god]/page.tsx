@@ -1,26 +1,31 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { db } from "@/lib/firebase";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useAuth } from "@/lib/hooks/useAuth";
 
 type PredictionForm = {
-  single: string;     // วิ่งโดดตัวเดียว
-  backup: string;     // ยิงเดี่ยวรอง
-  double: string[];   // 2 ตัวเป้า
-  triple: string[];   // 3 ตัววิน
-  quad: string[];     // 4 ตัวรับทรัพย์
-  penta: string[];    // 5 ตัวรวยไว
+  single: string;
+  backup: string;
+  double: string[];
+  triple: string[];
+  quad: string[];
+  penta: string[];
 };
 
 export default function AdminPredictionPage() {
   const { god } = useParams<{ god: string }>();
+  const { user } = useAuth();
+  const router = useRouter();
 
   const [loading, setLoading] = useState(false);
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+
   const [formData, setFormData] = useState<PredictionForm>({
     single: "",
     backup: "",
@@ -29,6 +34,23 @@ export default function AdminPredictionPage() {
     quad: ["", "", "", ""],
     penta: ["", "", "", "", ""],
   });
+
+  // ✅ โหลด role ของ user
+  useEffect(() => {
+    const checkRole = async () => {
+      if (!user) return setIsAdmin(false);
+
+      const ref = doc(db, "users", user.uid);
+      const snap = await getDoc(ref);
+      if (snap.exists() && snap.data().role === "admin") {
+        setIsAdmin(true);
+      } else {
+        setIsAdmin(false);
+        router.push("/home"); // ❌ ไม่ใช่ admin → เด้งกลับ
+      }
+    };
+    checkRole();
+  }, [user, router]);
 
   // โหลดข้อมูลเก่าจาก Firestore
   useEffect(() => {
@@ -51,7 +73,6 @@ export default function AdminPredictionPage() {
     fetchData();
   }, [god]);
 
-  // handleChange
   const handleChange = (
     field: keyof PredictionForm,
     index: number,
@@ -67,19 +88,18 @@ export default function AdminPredictionPage() {
     });
   };
 
-  // save to Firestore (ใช้ field ตรงกับ Firestore จริง)
   const handleSave = async () => {
     if (!god) return;
     setLoading(true);
     try {
       const ref = doc(db, "predictions", god);
       await setDoc(ref, {
-        oneDigit: formData.single,           // วิ่งโดดตัวเดียว
-        onePair: formData.backup,            // ยิงเดี่ยวรอง
-        twoDigit: formData.double.join(""),  // 2 ตัวเป้า
-        threeDigit: formData.triple.join(""),// 3 ตัววิน
-        fourDigit: formData.quad.join(""),   // 4 ตัวรับทรัพย์
-        fiveDigit: formData.penta.join(""),  // 5 ตัวรวยไว
+        oneDigit: formData.single,
+        onePair: formData.backup,
+        twoDigit: formData.double.join(""),
+        threeDigit: formData.triple.join(""),
+        fourDigit: formData.quad.join(""),
+        fiveDigit: formData.penta.join(""),
         updatedAt: serverTimestamp(),
       });
       toast.success("บันทึกเลขเด็ดเรียบร้อยแล้ว");
@@ -91,6 +111,17 @@ export default function AdminPredictionPage() {
     }
   };
 
+  // 🟡 ถ้ายังโหลด role อยู่ → แสดงกำลังโหลด
+  if (isAdmin === null) {
+    return <div className="p-6 text-center">กำลังตรวจสอบสิทธิ์...</div>;
+  }
+
+  // ❌ ถ้าไม่ใช่ admin → แสดงข้อความ (กัน fallback)
+  if (!isAdmin) {
+    return <div className="p-6 text-center">คุณไม่มีสิทธิ์เข้าหน้านี้</div>;
+  }
+
+  // ✅ Admin เท่านั้น → render ฟอร์ม
   return (
     <div className="max-w-xl mx-auto p-6 bg-white rounded-lg shadow">
       <h1 className="text-xl font-bold mb-6">แก้ไขตัวเลขของ {god}</h1>
@@ -104,14 +135,14 @@ export default function AdminPredictionPage() {
       />
 
       {/* ยิงเดี่ยวรอง */}
-      <label className="block mb-1">ยิ่งเดี่ยวรอง</label>
+      <label className="block mb-1">ยิงเดี่ยวรอง</label>
       <Input
         value={formData.backup}
         onChange={(e) => handleChange("backup", 0, e.target.value)}
         className="mb-4"
       />
 
-      {/* 2 ตัวเป้า */}
+      {/* 2 ตัว */}
       <label className="block mb-1">เลข 2 ตัว</label>
       <div className="flex gap-2 mb-4">
         {formData.double.map((num, i) => (
@@ -123,7 +154,7 @@ export default function AdminPredictionPage() {
         ))}
       </div>
 
-      {/* 3 ตัววิน */}
+      {/* 3 ตัว */}
       <label className="block mb-1">เลข 3 ตัว</label>
       <div className="flex gap-2 mb-4">
         {formData.triple.map((num, i) => (
@@ -135,7 +166,7 @@ export default function AdminPredictionPage() {
         ))}
       </div>
 
-      {/* 4 ตัวรับทรัพย์ */}
+      {/* 4 ตัว */}
       <label className="block mb-1">เลข 4 ตัว</label>
       <div className="flex gap-2 mb-4">
         {formData.quad.map((num, i) => (
@@ -147,7 +178,7 @@ export default function AdminPredictionPage() {
         ))}
       </div>
 
-      {/* 5 ตัวรวยไว */}
+      {/* 5 ตัว */}
       <label className="block mb-1">เลข 5 ตัว</label>
       <div className="flex gap-2 mb-6">
         {formData.penta.map((num, i) => (
