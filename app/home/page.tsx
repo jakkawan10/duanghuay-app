@@ -84,6 +84,12 @@ export default function HomePage() {
     }
     if (!udoc) return;
 
+    // 👑 Admin → ข้ามการตรวจสอบ เข้าได้ทุกเทพ
+    if (udoc.role === "admin") {
+      router.push(`/fortune/deity/${godId}`);
+      return;
+    }
+
     // 1) ยังไม่เคยเลือกฟรี → บันทึกเทพฟรีแล้วเข้าได้เลย
     if (!udoc.selectedGod) {
       const ref = doc(db, "users", user.uid);
@@ -97,13 +103,13 @@ export default function HomePage() {
       return;
     }
 
-    // 2) ถ้าเป็นเทพที่มีสิทธิ์อยู่แล้ว (ฟรี/เคยปลดล็อก) → เข้าได้เลย
+    // 2) ถ้าเป็นเทพที่มีสิทธิ์อยู่แล้ว
     if (udoc.selectedGod === godId || (udoc.paidGods || []).includes(godId)) {
       router.push(`/fortune/deity/${godId}`);
       return;
     }
 
-    // 3) ยังมี slot เหลือในแผนปัจจุบัน → ใช้สิทธิ์เพิ่มแล้วเข้า
+    // 3) ยังมี slot เหลือ
     if (slotsLeft > 0) {
       const ref = doc(db, "users", user.uid);
       const nextPaid = [...(udoc.paidGods || []), godId];
@@ -121,6 +127,7 @@ export default function HomePage() {
     setPendingGod(godId);
     setShowPay(true);
   };
+
 
   const recommendedTier: 1 | 2 | 3 = useMemo(() => {
     const need = extraUsed + 1;
