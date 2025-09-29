@@ -180,7 +180,7 @@ export default function HomePage() {
         return null;   // ✅ ต้อง return ReactNode (ที่นี่คืน null)
       })()}
 
-      {/* Admin Zone (ทุกคนเห็น แต่แค่ admin ที่กดได้) */}
+      {/* Admin Zone (ทุกคนเห็น แต่เฉพาะ admin ที่กดได้) */}
       <h3 className="text-center font-bold mb-4">🔑 Admin Zone</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {GODS.map((g) => (
@@ -204,6 +204,7 @@ export default function HomePage() {
           </button>
         ))}
       </div>
+
 
 
       {/* Payment Modal */}
