@@ -62,11 +62,11 @@ export default function HomePage() {
           paidGods: d.paidGods ?? [],
           planTier: (d.planTier ?? 0) as 0 | 1 | 2 | 3,
           expireAt: d.expireAt,
-          role: d.role ?? undefined,
+          role: d.role ?? "user",   // ✅ ถ้าไม่มีให้ default เป็น user
         });
       } else {
-        // สร้างเอกสารเปล่าไว้ก่อน
-        await setDoc(ref, { planTier: 0, paidGods: [] }, { merge: true });
+        // ✅ ตอนสร้างใหม่ ใส่ role: "user"
+        await setDoc(ref, { planTier: 0, paidGods: [], role: "user" }, { merge: true });
         setUdoc({ selectedGod: undefined, paidGods: [], planTier: 0, role: "user" });
       }
       setLoading(false);
