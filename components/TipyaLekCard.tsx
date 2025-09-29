@@ -34,12 +34,12 @@ export default function TipyaLekCard() {
 
     // ➕ สร้าง payment_requests
     const payRef = doc(collection(db, "payment_requests"));
-    await payRef.set({
+    await setDoc(payRef, {
       id: payRef.id,
       userId: user.uid,
-      method: "qr", // หรือ inapp
+      method: "qr",
       status: "pending",
-      createdAt: new Date(),
+      createdAt: serverTimestamp(),
       amount: 299,
       type: "tipyalek",
     });
