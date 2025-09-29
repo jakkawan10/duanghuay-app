@@ -180,25 +180,31 @@ export default function HomePage() {
         return null;   // ✅ ต้อง return ReactNode (ที่นี่คืน null)
       })()}
 
-      {/* Admin Zone */}
-      {udoc?.role === "admin" && (
-        <>
-          <h3 className="text-center font-bold mb-4">🔑 Admin Zone</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {GODS.map((g) => (
-              <button
-                key={g.id}
-                onClick={() => {
-                  router.push(`/admin/prediction/${g.id}`);
-                }}
-                className="p-5 rounded-lg border bg-gray-50 hover:bg-gray-100 text-left"
-              >
-                ✏️ แก้เลข {g.name}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
+      {/* Admin Zone (ทุกคนเห็น แต่แค่ admin ที่กดได้) */}
+      <h3 className="text-center font-bold mb-4">🔑 Admin Zone</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {GODS.map((g) => (
+          <button
+            key={g.id}
+            onClick={() => {
+              if (udoc?.role === "admin") {
+                router.push(`/admin/prediction/${g.id}`);
+              } else {
+                alert("สิทธิ์นี้สำหรับ Admin เท่านั้น");
+              }
+            }}
+            disabled={udoc?.role !== "admin"}
+            className={`p-5 rounded-lg border text-left ${
+              udoc?.role === "admin"
+                ? "bg-gray-50 hover:bg-gray-100 cursor-pointer"
+                : "bg-gray-200 text-gray-400 cursor-not-allowed"
+            }`}
+          >
+            ✏️ แก้เลข {g.name}
+          </button>
+        ))}
+      </div>
+
 
       {/* Payment Modal */}
       {showPay && (
