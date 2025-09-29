@@ -15,17 +15,7 @@ import {
 import { useAuth } from "@/lib/hooks/useAuth";
 import TipyaLekCard from "@/components/TipyaLekCard";
 
-export default function HomePage() {
-  return (
-    <div className="p-4 space-y-6">
-      {/* 4 เทพเดิม */}
-      {/* ... */}
-      
-      {/* องค์ทิพยเลข */}
-      <TipyaLekCard />
-    </div>
-  );
-}
+
 type UserDoc = {
   selectedGod?: string;      // เทพฟรีที่เลือก
   paidGods?: string[];       // เทพที่ปลดล็อกแล้ว
