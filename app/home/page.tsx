@@ -175,7 +175,7 @@ export default function HomePage() {
       </div>
 
       {/* Admin Zone: เฉพาะ admin */}
-      {udoc?.role === "admin" && (
+      {udoc && udoc.role && udoc.role.toLowerCase() === "admin" && (
         <>
           <h3 className="text-center font-bold mb-4">🔑 Admin Zone</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -191,6 +191,7 @@ export default function HomePage() {
           </div>
         </>
       )}
+
 
       {/* Payment Modal */}
       {showPay && (
