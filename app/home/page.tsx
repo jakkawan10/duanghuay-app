@@ -173,9 +173,14 @@ export default function HomePage() {
           </button>
         ))}
       </div>
-      
-      {console.log("Render check role:", udoc?.role)}
 
+      {/* Debug log */}
+      {(() => {
+        console.log("Render check role:", udoc?.role);
+        return null;   // ✅ ต้อง return ReactNode (ที่นี่คืน null)
+      })()}
+
+      {/* Admin Zone */}
       {udoc?.role === "admin" && (
         <>
           <h3 className="text-center font-bold mb-4">🔑 Admin Zone</h3>
@@ -183,7 +188,9 @@ export default function HomePage() {
             {GODS.map((g) => (
               <button
                 key={g.id}
-                onClick={() => router.push(`/admin/prediction/${g.id}`)}
+                onClick={() => {
+                  router.push(`/admin/prediction/${g.id}`);
+                }}
                 className="p-5 rounded-lg border bg-gray-50 hover:bg-gray-100 text-left"
               >
                 ✏️ แก้เลข {g.name}
@@ -192,7 +199,6 @@ export default function HomePage() {
           </div>
         </>
       )}
-
 
       {/* Payment Modal */}
       {showPay && (
