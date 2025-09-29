@@ -58,21 +58,17 @@ export default function HomePage() {
       if (snap.exists()) {
         const d = snap.data() as UserDoc;
         setUdoc({
-          role: d.role ?? "user", // ✅ ดึง role จาก Firestore
-          selectedGod: d.selectedGod,
+          selectedGod: d.selectedGod ?? undefined,
           paidGods: d.paidGods ?? [],
           planTier: (d.planTier ?? 0) as 0 | 1 | 2 | 3,
           expireAt: d.expireAt,
+          role: d.role ?? "user",   // << ดึง role มาด้วย
         });
       } else {
-        await setDoc(
-          ref,
-          { planTier: 0, paidGods: [], role: "user" },
-          { merge: true }
-        );
+        await setDoc(ref, { planTier: 0, paidGods: [], role: "user" }, { merge: true });
         setUdoc({ selectedGod: undefined, paidGods: [], planTier: 0, role: "user" });
       }
-      setLoading(false);
+
     };
     load();
   }, [user]);
