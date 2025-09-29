@@ -58,11 +58,11 @@ export default function HomePage() {
       if (snap.exists()) {
         const d = snap.data() as UserDoc;
         setUdoc({
-          selectedGod: d.selectedGod ?? undefined,
-          paidGods: d.paidGods ?? [],
-          planTier: (d.planTier ?? 0) as 0 | 1 | 2 | 3,
-          expireAt: d.expireAt,
-          role: d.role ?? "user",   // ✅ โหลด role
+          selectedGod?: string;
+          paidGods?: string[];
+          planTier?: 0 | 1 | 2 | 3;
+          expireAt?: Timestamp;
+          role?: string;   // ✅ เพิ่มตรงนี้
         });
       } else {
         await setDoc(
