@@ -19,7 +19,7 @@ type UserDoc = {
   paidGods?: string[];       // เทพที่ปลดล็อกแล้ว
   planTier?: 0 | 1 | 2 | 3;  // จำนวนเทพที่อนุญาตให้ปลดล็อกเพิ่ม (1/2/3)
   expireAt?: Timestamp;      // วันหมดอายุสิทธิ์
-  role?: string;             // บทบาท เช่น "admin" หรือ "user"
+  role?: string;             // user หรือ admin
 };
 
 const GODS = [
@@ -62,11 +62,14 @@ export default function HomePage() {
           paidGods: d.paidGods ?? [],
           planTier: (d.planTier ?? 0) as 0 | 1 | 2 | 3,
           expireAt: d.expireAt,
-          role: d.role ?? "user",   // ✅ ถ้าไม่มีให้ default เป็น user
+          role: d.role ?? "user",   // ✅ โหลด role
         });
       } else {
-        // ✅ ตอนสร้างใหม่ ใส่ role: "user"
-        await setDoc(ref, { planTier: 0, paidGods: [], role: "user" }, { merge: true });
+        await setDoc(
+          ref,
+          { planTier: 0, paidGods: [], role: "user" },
+          { merge: true }
+        );
         setUdoc({ selectedGod: undefined, paidGods: [], planTier: 0, role: "user" });
       }
       setLoading(false);
@@ -80,7 +83,6 @@ export default function HomePage() {
 
   const handleSelectGod = async (godId: string) => {
     if (!user) {
-      // ไป login ทันที ไม่ต้อง alert
       router.push("/login");
       return;
     }
@@ -89,7 +91,11 @@ export default function HomePage() {
     // 1) ยังไม่เคยเลือกฟรี → บันทึกเทพฟรีแล้วเข้าได้เลย
     if (!udoc.selectedGod) {
       const ref = doc(db, "users", user.uid);
-      await setDoc(ref, { selectedGod: godId, updatedAt: serverTimestamp() }, { merge: true });
+      await setDoc(
+        ref,
+        { selectedGod: godId, updatedAt: serverTimestamp() },
+        { merge: true }
+      );
       setUdoc((p) => ({ ...(p ?? {}), selectedGod: godId }));
       router.push(`/fortune/deity/${godId}`);
       return;
@@ -120,9 +126,8 @@ export default function HomePage() {
     setShowPay(true);
   };
 
-  // tier ที่แนะนำให้พอสำหรับ "ปลดเพิ่ม 1 เทพ" จากสถานะปัจจุบัน
   const recommendedTier: 1 | 2 | 3 = useMemo(() => {
-    const need = extraUsed + 1; // ต้องการปลดรวม (ไม่รวมเทพฟรี)
+    const need = extraUsed + 1;
     if (need <= 1) return 1;
     if (need === 2) return 2;
     return 3;
@@ -131,15 +136,14 @@ export default function HomePage() {
   const requestPayment = async (tier: 1 | 2 | 3) => {
     if (!user) return;
 
-    // บันทึกคำขอชำระเงินเพื่อให้แอดมินอนุมัติ (manual verify)
     const base = collection(db, "users", user.uid, "payment_requests");
     await addDoc(base, {
       tier,
       price: PRICING[tier],
       months: 1,
-      targetGod: pendingGod, // เทพที่ผู้ใช้กำลังจะปลด
+      targetGod: pendingGod,
       createdAt: serverTimestamp(),
-      status: "pending", // รอแอดมินอนุมัติ แล้วค่อย set planTier/expireAt จริง
+      status: "pending",
     });
 
     alert("ส่งคำขอชำระเงินแล้ว กรุณาอัปโหลดสลิป/แจ้งแอดมินเพื่ออนุมัติสิทธิ์");
@@ -173,7 +177,7 @@ export default function HomePage() {
         ))}
       </div>
 
-      {/* Admin Zone: แสดงเฉพาะ admin */}
+      {/* Admin Zone: เฉพาะ admin */}
       {udoc?.role === "admin" && (
         <>
           <h3 className="text-center font-bold mb-4">🔑 Admin Zone</h3>
@@ -194,9 +198,10 @@ export default function HomePage() {
       {/* Payment Modal */}
       {showPay && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-white w-full max-w-3xl rounded-2xl p-6 
-                          max-h-[90vh] overflow-y-auto">
-            <h4 className="text-xl font-bold text-center mb-2">ปลดล็อกเทพเพิ่ม (อายุสิทธิ์ 1 เดือน)</h4>
+          <div className="bg-white w-full max-w-3xl rounded-2xl p-6 max-h-[90vh] overflow-y-auto">
+            <h4 className="text-xl font-bold text-center mb-2">
+              ปลดล็อกเทพเพิ่ม (อายุสิทธิ์ 1 เดือน)
+            </h4>
             <p className="text-center text-gray-600 mb-6">
               ตอนนี้คุณปลดเพิ่มแล้ว {extraUsed} เทพ • แผนปัจจุบันรองรับ {slots} เทพ
             </p>
@@ -205,19 +210,23 @@ export default function HomePage() {
               {[1, 2, 3].map((t) => (
                 <div
                   key={t}
-                  className={`rounded-xl border p-4 text-center ${t === recommendedTier ? "ring-2 ring-amber-400" : ""}`}
+                  className={`rounded-xl border p-4 text-center ${
+                    t === recommendedTier ? "ring-2 ring-amber-400" : ""
+                  }`}
                 >
                   <div className="text-lg font-semibold mb-1">
                     ปลดล็อกเพิ่ม {t} เทพ
                   </div>
-                  <div className="text-2xl font-extrabold mb-2">{PRICING[t as 1|2|3]}฿/เดือน</div>
+                  <div className="text-2xl font-extrabold mb-2">
+                    {PRICING[t as 1 | 2 | 3]}฿/เดือน
+                  </div>
                   <img
-                    src={QR_IMAGES[t as 1|2|3]}
-                    alt={`QR ${PRICING[t as 1|2|3]} บาท`}
+                    src={QR_IMAGES[t as 1 | 2 | 3]}
+                    alt={`QR ${PRICING[t as 1 | 2 | 3]} บาท`}
                     className="w-full max-w-[220px] mx-auto rounded mb-3 border"
                   />
                   <button
-                    onClick={() => requestPayment(t as 1|2|3)}
+                    onClick={() => requestPayment(t as 1 | 2 | 3)}
                     className="px-4 py-2 rounded bg-black text-white hover:opacity-90"
                   >
                     ชำระด้วย QR นี้
