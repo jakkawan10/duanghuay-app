@@ -173,9 +173,10 @@ export default function HomePage() {
           </button>
         ))}
       </div>
+      
+      {console.log("Render check role:", udoc?.role)}
 
-      {/* Admin Zone: เฉพาะ admin */}
-      {udoc && udoc.role && udoc.role.toLowerCase() === "admin" && (
+      {udoc?.role === "admin" && (
         <>
           <h3 className="text-center font-bold mb-4">🔑 Admin Zone</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
