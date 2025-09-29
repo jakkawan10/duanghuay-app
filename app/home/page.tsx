@@ -57,6 +57,7 @@ export default function HomePage() {
       const snap = await getDoc(ref);
       if (snap.exists()) {
         const d = snap.data() as UserDoc;
+        console.log("Loaded user doc:", d);  
         setUdoc({
           selectedGod: d.selectedGod ?? undefined,
           paidGods: d.paidGods ?? [],
