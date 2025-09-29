@@ -29,6 +29,7 @@ const GODS = [
   { id: "intra", name: "เจ้าองค์อินทร์แสนดี", color: "from-blue-200 to-blue-300" },
   { id: "maneewitch", name: "เจ้ามณีเวทยมนต์", color: "from-yellow-200 to-yellow-300" },
   { id: "dandok", name: "เจ้าแม่ดานดอกษ์ศ์", color: "from-green-200 to-green-300" },
+  { id: "tipyalek", name: "องค์ทิพยเลข", color: "from-purple-200 to-purple-400" },
 ];
 
 const PRICING: Record<1 | 2 | 3, number> = { 1: 159, 2: 259, 3: 299 };
