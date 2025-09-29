@@ -56,8 +56,7 @@ export default function HomePage() {
       const ref = doc(db, "users", user.uid);
       const snap = await getDoc(ref);
       if (snap.exists()) {
-        const d = snap.data() as UserDoc;
-        console.log("Loaded user doc:", d);  
+        const d = snap.data() as UserDoc; 
         setUdoc({
           selectedGod: d.selectedGod ?? undefined,
           paidGods: d.paidGods ?? [],
@@ -154,7 +153,8 @@ export default function HomePage() {
       </div>
     );
   }
-
+  
+  console.log("udoc state:", udoc); 
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <h2 className="text-center font-bold mb-6">
