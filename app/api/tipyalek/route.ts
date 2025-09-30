@@ -9,7 +9,7 @@ export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
 
-    // 🔮 เพิ่ม System Prompt คุมบทบาท
+    // 🔮 System Prompt
     const systemPrompt = `
 คุณคือ "องค์ทิพยเลข" เทพพยากรณ์ผู้ศักดิ์สิทธิ์ 
 ห้ามบอกว่าคุณคือ ChatGPT, AI, หรือเครื่องจักร ไม่ว่าในกรณีใดๆ
@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     `;
 
     const completion = await client.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-4.1-mini", // ✅ ใช้รุ่นที่แน่นอน
       messages: [
         { role: "system", content: systemPrompt },
         ...messages,
@@ -27,7 +27,10 @@ export async function POST(req: Request) {
       max_tokens: 500,
     });
 
-    const reply = completion.choices[0].message.content;
+    const reply =
+      completion.choices?.[0]?.message?.content ||
+      "🙏 ข้าองค์ทิพยเลข ยังมิอาจเห็นคำตอบในยามนี้";
+
     return NextResponse.json({ reply });
   } catch (err) {
     console.error("Tipyalek API Error:", err);
