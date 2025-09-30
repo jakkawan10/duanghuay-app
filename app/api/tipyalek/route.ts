@@ -1,70 +1,62 @@
-import { NextResponse } from "next/server";
-import { db } from "@/lib/firebase"; // ต้องมี lib/firebase.ts สำหรับ init Firebase
-import { doc, getDoc } from "firebase/firestore";
+import { kv } from "@vercel/kv";
 import OpenAI from "openai";
+import { NextRequest, NextResponse } from "next/server";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
 });
 
-export async function POST() {
-  try {
-    // 1. ดึงเลขจาก Firestore
-    const ref = doc(db, "predictions/tipyalek/stats", "all");
-    const snap = await getDoc(ref);
+const SYSTEM_PROMPT = `
+คุณคือ "องค์ทิพยเลข" ผู้ทำนายโชคชะตาด้วยความขลังและศักดิ์สิทธิ์ 
+ตอบแบบโต้ตอบ เป็นกันเอง แต่ยังคงบรรยากาศของเทพพยากรณ์
+`;
 
-    if (!snap.exists()) {
-      return NextResponse.json(
-        { message: "❌ ไม่พบข้อมูลเลขจาก Firestore" },
-        { status: 404 }
-      );
+// สร้าง session id จาก user (กรณีนี้ mock = "guest")
+// ถ้า auth แล้วใช้ uid
+function getSessionId(req: NextRequest) {
+  return "guest"; // TODO: เปลี่ยนเป็น uid ถ้ามีระบบล็อกอิน
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { message } = body;
+
+    if (!message) {
+      return NextResponse.json({ error: "Message is required" }, { status: 400 });
     }
 
-    const data = snap.data();
+    const sessionId = getSessionId(req);
+    const key = `chat:tipyalek:${sessionId}`;
 
-    // แยกเลขออกมา
-    const one = data.one || [];
-    const two = data.two || [];
-    const three = data.three || [];
-    const four = data.four || [];
-    const five = data.five || [];
+    // ดึง history จาก KV
+    let history = (await kv.get<any[]>(key)) || [];
 
-    // 2. สร้างข้อความ prompt ส่งให้ OpenAI
-    const prompt = `
-คุณคือเทพพยากรณ์เลขเด็ดชื่อ "องค์ทิพยเลข"
-ข้อมูลสถิติจากฐานข้อมูล:
-- เลข 1 ตัว: ${JSON.stringify(one)}
-- เลข 2 ตัว: ${JSON.stringify(two)}
-- เลข 3 ตัว: ${JSON.stringify(three)}
-- เลข 4 ตัว: ${JSON.stringify(four)}
-- เลข 5 ตัว: ${JSON.stringify(five)}
+    // push ข้อความใหม่
+    history.push({ role: "user", content: message });
 
-จงเลือกเลข "เด่นที่สุด" โดยอ้างอิงจากสถิติ + ความเป็นไปได้สูงสุด
-ให้ตอบสั้นๆ เช่น:
-เลขเด่น 3 ตัว คือ 752
-เลขเด่น 2 ตัว คือ 57
-เลขเด่น 1 ตัว คือ 5
-    `;
-
-    // 3. ประมวลผลด้วย OpenAI
+    // ส่งเข้า GPT
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini", // เล็ก ประหยัด และเร็ว
-      messages: [{ role: "user", content: prompt }],
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        ...history,
+      ],
+      max_tokens: 500,
       temperature: 0.7,
-      max_tokens: 200,
     });
 
-    const result =
-      completion.choices[0]?.message?.content?.trim() ||
-      "❌ ไม่สามารถทำนายเลขได้";
+    const reply = completion.choices[0]?.message?.content || "❌ ไม่มีคำตอบ";
 
-    // 4. ตอบกลับหน้า TipyaLekPage
-    return NextResponse.json({ message: result });
+    // เก็บข้อความ GPT ลง history
+    history.push({ role: "assistant", content: reply });
+
+    // save กลับ KV (expire 1 ชั่วโมง)
+    await kv.set(key, history, { ex: 3600 });
+
+    return NextResponse.json({ reply });
   } catch (err) {
     console.error("API Error:", err);
-    return NextResponse.json(
-      { message: "❌ เกิดข้อผิดพลาดที่ server" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
