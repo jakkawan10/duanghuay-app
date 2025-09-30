@@ -1,74 +1,70 @@
 import { NextResponse } from "next/server";
-import { initializeApp, getApps } from "firebase/app";
-import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase"; // ต้องมี lib/firebase.ts สำหรับ init Firebase
+import { doc, getDoc } from "firebase/firestore";
 import OpenAI from "openai";
 
-// ✅ Firebase Config
-const firebaseConfig = {
-  apiKey: process.env.FIREBASE_API_KEY,
-  authDomain: process.env.FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.FIREBASE_PROJECT_ID,
-  storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.FIREBASE_APP_ID,
-};
-
-// init Firebase (กัน init ซ้ำ)
-if (!getApps().length) {
-  initializeApp(firebaseConfig);
-}
-const db = getFirestore();
-
-// ✅ OpenAI Client
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
 });
 
-export async function POST(req: Request) {
+export async function POST() {
   try {
-    const body = await req.json();
-    const { question } = body; // เช่น "เลข 3 ตัวเด่นคืออะไร"
-
-    // 🔹 ดึงข้อมูลจาก Firestore
-    const ref = doc(db, "predictions", "tipyalek", "stats", "all");
+    // 1. ดึงเลขจาก Firestore
+    const ref = doc(db, "predictions/tipyalek/stats", "all");
     const snap = await getDoc(ref);
 
     if (!snap.exists()) {
-      return NextResponse.json({ error: "ไม่พบข้อมูลจาก Firestore" }, { status: 404 });
+      return NextResponse.json(
+        { message: "❌ ไม่พบข้อมูลเลขจาก Firestore" },
+        { status: 404 }
+      );
     }
 
     const data = snap.data();
 
-    // 🔹 ใช้ OpenAI วิเคราะห์และสร้างคำตอบ
+    // แยกเลขออกมา
+    const one = data.one || [];
+    const two = data.two || [];
+    const three = data.three || [];
+    const four = data.four || [];
+    const five = data.five || [];
+
+    // 2. สร้างข้อความ prompt ส่งให้ OpenAI
     const prompt = `
-คุณคือเทพ Tipyalek ผู้เชี่ยวชาญการวิเคราะห์ตัวเลข
-นี่คือข้อมูลจากสถิติ:
-- เลข 1 ตัว: ${JSON.stringify(data.one)}
-- เลข 2 ตัว: ${JSON.stringify(data.two)}
-- เลข 3 ตัว: ${JSON.stringify(data.three)}
-- เลข 4 ตัว: ${JSON.stringify(data.four)}
-- เลข 5 ตัว: ${JSON.stringify(data.five)}
+คุณคือเทพพยากรณ์เลขเด็ดชื่อ "องค์ทิพยเลข"
+ข้อมูลสถิติจากฐานข้อมูล:
+- เลข 1 ตัว: ${JSON.stringify(one)}
+- เลข 2 ตัว: ${JSON.stringify(two)}
+- เลข 3 ตัว: ${JSON.stringify(three)}
+- เลข 4 ตัว: ${JSON.stringify(four)}
+- เลข 5 ตัว: ${JSON.stringify(five)}
 
-ผู้ใช้ถามว่า: "${question}"
-โปรดตอบเป็นภาษาธรรมชาติสั้นๆ เช่น:
-"เลข 3 ตัวเด่นคือ 752"
-`;
+จงเลือกเลข "เด่นที่สุด" โดยอ้างอิงจากสถิติ + ความเป็นไปได้สูงสุด
+ให้ตอบสั้นๆ เช่น:
+เลขเด่น 3 ตัว คือ 752
+เลขเด่น 2 ตัว คือ 57
+เลขเด่น 1 ตัว คือ 5
+    `;
 
-    const aiRes = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+    // 3. ประมวลผลด้วย OpenAI
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini", // เล็ก ประหยัด และเร็ว
       messages: [{ role: "user", content: prompt }],
-      max_tokens: 150,
+      temperature: 0.7,
+      max_tokens: 200,
     });
 
-    const answer = aiRes.choices[0]?.message?.content || "ไม่สามารถวิเคราะห์ได้";
+    const result =
+      completion.choices[0]?.message?.content?.trim() ||
+      "❌ ไม่สามารถทำนายเลขได้";
 
-    return NextResponse.json({
-      question,
-      answer,
-      raw: data, // ส่งดิบกลับไปด้วย เผื่อ debug
-    });
-  } catch (error: any) {
-    console.error("API Error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    // 4. ตอบกลับหน้า TipyaLekPage
+    return NextResponse.json({ message: result });
+  } catch (err) {
+    console.error("API Error:", err);
+    return NextResponse.json(
+      { message: "❌ เกิดข้อผิดพลาดที่ server" },
+      { status: 500 }
+    );
   }
 }
