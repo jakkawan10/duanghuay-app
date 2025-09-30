@@ -1,43 +1,54 @@
 import { NextResponse } from "next/server";
-import client from "@/lib/redis";
 import OpenAI from "openai";
+import { createClient } from "redis";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY!,
+});
 
-const SESSION_TTL = 60 * 60; // 1 ชั่วโมง
+// 🔑 Connect Redis
+const redis = createClient({
+  url: process.env.REDIS_URL!,
+});
+redis.connect();
+
+const SESSION_KEY = "chat:tipyalek";
+const EXPIRY_SECONDS = 60 * 60; // 1 ชั่วโมง
 
 export async function POST(req: Request) {
   try {
-    const { sessionId, message } = await req.json();
+    const { messages } = await req.json();
 
-    const key = `tipyalek:${sessionId}`;
+    // 1) ดึงประวัติการสนทนาจาก Redis
+    const historyStr = await redis.get(SESSION_KEY);
+    let history: { role: string; content: string }[] = historyStr
+      ? JSON.parse(historyStr)
+      : [];
 
-    // ดึงประวัติการสนทนา
-    const historyRaw = await client.get(key);
-    const history = historyRaw ? JSON.parse(historyRaw) : [];
+    // 2) รวมข้อความใหม่
+    const updatedHistory = [...history, ...messages];
 
-    // เพิ่มข้อความใหม่เข้าไป
-    history.push({ role: "user", content: message });
-
-    // ส่งให้ GPT
-    const completion = await openai.chat.completions.create({
+    // 3) เรียก OpenAI (ChatGPT)
+    const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
-      messages: history,
+      messages: updatedHistory,
+      max_tokens: 500,
     });
 
-    const reply = completion.choices[0].message.content || "❌ ไม่มีคำตอบ";
+    const reply = response.choices[0].message?.content || "❌ ไม่มีคำตอบ";
 
-    // เก็บข้อความ assistant ลง history
-    history.push({ role: "assistant", content: reply });
+    // 4) อัปเดต history กลับไป Redis
+    const newHistory = [...updatedHistory, { role: "assistant", content: reply }];
+    await redis.set(SESSION_KEY, JSON.stringify(newHistory), {
+      EX: EXPIRY_SECONDS, // เก็บ 1 ชั่วโมง
+    });
 
-    // เซฟกลับ Redis พร้อม TTL
-    await client.set(key, JSON.stringify(history), { EX: SESSION_TTL });
-
+    // 5) ส่งกลับไปหา client
     return NextResponse.json({ reply });
-  } catch (err) {
-    console.error(err);
+  } catch (err: any) {
+    console.error("Tipyalek API Error:", err);
     return NextResponse.json(
-      { error: "เกิดข้อผิดพลาด" },
+      { error: "เกิดข้อผิดพลาดในการติดต่อองค์ทิพยเลข" },
       { status: 500 }
     );
   }
