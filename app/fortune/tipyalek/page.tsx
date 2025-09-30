@@ -2,82 +2,101 @@
 
 import { useState } from "react";
 
-export default function TipyaLekPage() {
-  const [loading, setLoading] = useState(false);
-  const [question, setQuestion] = useState("");
-  const [answer, setAnswer] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+type Message = {
+  role: "user" | "assistant";
+  content: string;
+};
 
-  const handleAsk = async () => {
-    if (!question.trim()) return;
+export default function TipyaLekPage() {
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      role: "assistant",
+      content: "👋 สวัสดี เราคือองค์ทิพยเลข ผู้ประมวลผลจากสถิติจริงและพลัง AI คุณอยากถามเรื่องเลขอะไร?",
+    },
+  ]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const sendMessage = async () => {
+    if (!input.trim()) return;
+    const newMessage: Message = { role: "user", content: input };
+    setMessages((prev) => [...prev, newMessage]);
+    setInput("");
     setLoading(true);
-    setAnswer(null);
-    setError(null);
 
     try {
       const res = await fetch("/api/tipyalek", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question }),
+        body: JSON.stringify({ question: input }),
       });
 
-      if (!res.ok) {
-        throw new Error("API request failed");
-      }
-
       const data = await res.json();
-      setAnswer(data.message || "❌ ไม่มีคำตอบจากองค์ทิพยเลข");
+      const aiMessage: Message = {
+        role: "assistant",
+        content: data.message || "❌ ไม่สามารถตอบได้",
+      };
+      setMessages((prev) => [...prev, aiMessage]);
     } catch (err) {
       console.error(err);
-      setError("เกิดข้อผิดพลาด กรุณาลองใหม่ภายหลัง");
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: "⚠️ เกิดข้อผิดพลาด กรุณาลองใหม่" },
+      ]);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-black text-yellow-400 flex flex-col items-center p-8">
-      {/* หัวเรื่อง */}
-      <h1 className="text-3xl font-bold mb-4">🔮 เทพองค์ทิพยเลข 🔮</h1>
-      <img
-        src="/images/tipyalek.png"
-        alt="องค์ทิพยเลข"
-        className="w-40 h-40 mb-6 rounded-full border-4 border-yellow-500 shadow-lg"
-      />
-      <p className="mb-6 text-center text-lg max-w-xl">
-        ผู้ประทานเลขเด็ดจากการวิเคราะห์สถิติจริงผสานพลัง AI อันชาญฉลาด
-      </p>
+    <div className="min-h-screen flex flex-col bg-black text-yellow-400">
+      {/* Header */}
+      <div className="p-4 text-center border-b border-yellow-600">
+        <h1 className="text-2xl font-bold">✨ องค์ทิพยเลข ✨</h1>
+        <p className="text-sm text-gray-400">
+          ผู้ประมวลผลจากสถิติจริงและพลัง AI
+        </p>
+      </div>
 
-      {/* ช่องให้ผู้ใช้ถาม */}
-      <textarea
-        value={question}
-        onChange={(e) => setQuestion(e.target.value)}
-        placeholder="พิมพ์คำถาม เช่น เลข 3 ตัวเด่นคืออะไร..."
-        className="w-full max-w-lg p-4 rounded-lg border border-yellow-500 bg-black text-yellow-400 placeholder-gray-500 mb-4"
-        rows={3}
-      />
+      {/* Chat messages */}
+      <div className="flex-1 p-4 space-y-3 overflow-y-auto">
+        {messages.map((msg, i) => (
+          <div
+            key={i}
+            className={`p-3 rounded-lg max-w-[80%] ${
+              msg.role === "user"
+                ? "ml-auto bg-blue-600 text-white"
+                : "mr-auto bg-yellow-700 text-black"
+            }`}
+          >
+            {msg.content}
+          </div>
+        ))}
+        {loading && (
+          <div className="mr-auto p-3 rounded-lg bg-yellow-700 text-black">
+            กำลังคิดเลขให้คุณ...
+          </div>
+        )}
+      </div>
 
-      {/* ปุ่มทำนาย */}
-      <button
-        onClick={handleAsk}
-        disabled={loading}
-        className="px-6 py-3 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-black font-bold disabled:opacity-50 disabled:cursor-not-allowed transition"
-      >
-        {loading ? "กำลังถามองค์ทิพยเลข..." : "✨ ถามองค์ทิพยเลข"}
-      </button>
-
-      {/* แสดงคำตอบ */}
-      {answer && (
-        <div className="mt-8 p-6 bg-gray-900 rounded-xl w-full max-w-lg text-center shadow-lg">
-          <h2 className="font-bold text-xl mb-3">คำตอบจากองค์ทิพยเลข</h2>
-          <p className="text-lg whitespace-pre-line">{answer}</p>
-        </div>
-      )}
-
-      {/* แสดง error */}
-      {error && (
-        <div className="mt-6 text-red-400 font-semibold">{error}</div>
-      )}
+      {/* Input */}
+      <div className="p-4 border-t border-yellow-600 flex gap-2">
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+          placeholder="พิมพ์คำถามของคุณ..."
+          className="flex-1 px-4 py-2 rounded-lg bg-gray-900 text-white focus:outline-none"
+        />
+        <button
+          onClick={sendMessage}
+          disabled={loading}
+          className="px-4 py-2 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-black font-bold disabled:opacity-50"
+        >
+          ส่ง
+        </button>
+      </div>
     </div>
   );
 }
