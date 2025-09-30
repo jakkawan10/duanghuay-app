@@ -24,13 +24,17 @@ type UserDoc = {
   role?: string;             // user หรือ admin
 };
 
+const GODS_AI = [
+  { id: "tipyalek", name: "องค์ทิพยเลข", color: "from-purple-200 to-purple-400" }
+];
+
 const GODS = [
   { id: "sroiboon", name: "เจ้าแม่สร้อยบุญ", color: "from-pink-200 to-pink-300" },
   { id: "intra", name: "เจ้าองค์อินทร์แสนดี", color: "from-blue-200 to-blue-300" },
   { id: "maneewitch", name: "เจ้ามณีเวทยมนต์", color: "from-yellow-200 to-yellow-300" },
   { id: "dandok", name: "เจ้าแม่ดานดอกษ์ศ์", color: "from-green-200 to-green-300" },
-  { id: "tipyalek", name: "องค์ทิพยเลข", color: "from-purple-200 to-purple-400" },
 ];
+
 
 const PRICING: Record<1 | 2 | 3, number> = { 1: 159, 2: 259, 3: 299 };
 const QR_IMAGES: Record<1 | 2 | 3, string> = {
@@ -183,7 +187,20 @@ export default function HomePage() {
           </button>
         ))}
       </div>
-
+      
+      {/* เทพ AI แยกออกมา */}
+      <div className="grid grid-cols-1 gap-5 mb-10">
+        {GODS_AI.map((g) => (
+          <button
+            key={g.id}
+            onClick={() => router.push(`/fortune/deity/${g.id}`)} // ข้ามระบบ slot/free/admin ไปเลย
+            className={`p-6 rounded-xl shadow bg-gradient-to-r ${g.color} text-lg font-semibold hover:brightness-105 transition`}
+          >
+            {g.name}
+          </button>
+        ))}
+      </div>
+      
       {/* Debug log */}
       {(() => {
         console.log("Render check role:", udoc?.role);
