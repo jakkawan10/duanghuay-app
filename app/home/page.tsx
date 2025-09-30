@@ -193,13 +193,14 @@ export default function HomePage() {
         {GODS_AI.map((g) => (
           <button
             key={g.id}
-            onClick={() => router.push(`/fortune/deity/${g.id}`)} // ข้ามระบบ slot/free/admin ไปเลย
+            onClick={() => router.push(`/fortune/tipyalek`)} // ✅ วิ่งไปที่โฟลเดอร์ใหม่
             className={`p-6 rounded-xl shadow bg-gradient-to-r ${g.color} text-lg font-semibold hover:brightness-105 transition`}
           >
             {g.name}
           </button>
         ))}
       </div>
+
       
       {/* Debug log */}
       {(() => {
