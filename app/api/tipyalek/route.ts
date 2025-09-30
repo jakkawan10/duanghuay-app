@@ -1,62 +1,44 @@
-import { kv } from "@vercel/kv";
+import { NextResponse } from "next/server";
+import client from "@/lib/redis";
 import OpenAI from "openai";
-import { NextRequest, NextResponse } from "next/server";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!,
-});
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-const SYSTEM_PROMPT = `
-คุณคือ "องค์ทิพยเลข" ผู้ทำนายโชคชะตาด้วยความขลังและศักดิ์สิทธิ์ 
-ตอบแบบโต้ตอบ เป็นกันเอง แต่ยังคงบรรยากาศของเทพพยากรณ์
-`;
+const SESSION_TTL = 60 * 60; // 1 ชั่วโมง
 
-// สร้าง session id จาก user (กรณีนี้ mock = "guest")
-// ถ้า auth แล้วใช้ uid
-function getSessionId(req: NextRequest) {
-  return "guest"; // TODO: เปลี่ยนเป็น uid ถ้ามีระบบล็อกอิน
-}
-
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { message } = body;
+    const { sessionId, message } = await req.json();
 
-    if (!message) {
-      return NextResponse.json({ error: "Message is required" }, { status: 400 });
-    }
+    const key = `tipyalek:${sessionId}`;
 
-    const sessionId = getSessionId(req);
-    const key = `chat:tipyalek:${sessionId}`;
+    // ดึงประวัติการสนทนา
+    const historyRaw = await client.get(key);
+    const history = historyRaw ? JSON.parse(historyRaw) : [];
 
-    // ดึง history จาก KV
-    let history = (await kv.get<any[]>(key)) || [];
-
-    // push ข้อความใหม่
+    // เพิ่มข้อความใหม่เข้าไป
     history.push({ role: "user", content: message });
 
-    // ส่งเข้า GPT
+    // ส่งให้ GPT
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        ...history,
-      ],
-      max_tokens: 500,
-      temperature: 0.7,
+      messages: history,
     });
 
-    const reply = completion.choices[0]?.message?.content || "❌ ไม่มีคำตอบ";
+    const reply = completion.choices[0].message.content || "❌ ไม่มีคำตอบ";
 
-    // เก็บข้อความ GPT ลง history
+    // เก็บข้อความ assistant ลง history
     history.push({ role: "assistant", content: reply });
 
-    // save กลับ KV (expire 1 ชั่วโมง)
-    await kv.set(key, history, { ex: 3600 });
+    // เซฟกลับ Redis พร้อม TTL
+    await client.set(key, JSON.stringify(history), { EX: SESSION_TTL });
 
     return NextResponse.json({ reply });
   } catch (err) {
-    console.error("API Error:", err);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    console.error(err);
+    return NextResponse.json(
+      { error: "เกิดข้อผิดพลาด" },
+      { status: 500 }
+    );
   }
 }
