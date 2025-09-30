@@ -1,68 +1,74 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/firebase";
-import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
+import { initializeApp, getApps } from "firebase/app";
+import { getFirestore, doc, getDoc } from "firebase/firestore";
 import OpenAI from "openai";
 
-// โหลด API KEY จาก Environment
+// ✅ Firebase Config
+const firebaseConfig = {
+  apiKey: process.env.FIREBASE_API_KEY,
+  authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.FIREBASE_PROJECT_ID,
+  storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.FIREBASE_APP_ID,
+};
+
+// init Firebase (กัน init ซ้ำ)
+if (!getApps().length) {
+  initializeApp(firebaseConfig);
+}
+const db = getFirestore();
+
+// ✅ OpenAI Client
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY!,
 });
 
-export async function POST() {
+export async function POST(req: Request) {
   try {
-    // 1) ดึงสถิติย้อนหลังจาก Firestore (ล่าสุด 10 งวด)
-    const q = query(
-      collection(db, "predictions", "tipyalek", "history"),
-      orderBy("createdAt", "desc"),
-      limit(10)
-    );
-    const snap = await getDocs(q);
-    const history: any[] = [];
-    snap.forEach((doc) => history.push(doc.data()));
+    const body = await req.json();
+    const { question } = body; // เช่น "เลข 3 ตัวเด่นคืออะไร"
 
-    // 2) เตรียมข้อความสถิติ
-    const statsText =
-      history.length > 0
-        ? history
-            .map(
-              (h, i) =>
-                `งวด ${i + 1}: เลขเด่น ${h.main || "-"}, รอง ${h.sub || "-"}, 2ตัว ${h.two || "-"}, 3ตัว ${h.three || "-"}`
-            )
-            .join("\n")
-        : "ไม่มีข้อมูลสถิติ";
+    // 🔹 ดึงข้อมูลจาก Firestore
+    const ref = doc(db, "predictions", "tipyalek", "stats", "all");
+    const snap = await getDoc(ref);
 
-    // 3) สร้าง Prompt สำหรับ AI
+    if (!snap.exists()) {
+      return NextResponse.json({ error: "ไม่พบข้อมูลจาก Firestore" }, { status: 404 });
+    }
+
+    const data = snap.data();
+
+    // 🔹 ใช้ OpenAI วิเคราะห์และสร้างคำตอบ
     const prompt = `
-คุณคือ "องค์ทิพยเลข" เทพผู้ใช้สถิติและ AI วิเคราะห์แนวโน้มตัวเลขลอตเตอรี่
-ข้อมูลสถิติย้อนหลัง (สูงสุด 10 งวด):
-${statsText}
+คุณคือเทพ Tipyalek ผู้เชี่ยวชาญการวิเคราะห์ตัวเลข
+นี่คือข้อมูลจากสถิติ:
+- เลข 1 ตัว: ${JSON.stringify(data.one)}
+- เลข 2 ตัว: ${JSON.stringify(data.two)}
+- เลข 3 ตัว: ${JSON.stringify(data.three)}
+- เลข 4 ตัว: ${JSON.stringify(data.four)}
+- เลข 5 ตัว: ${JSON.stringify(data.five)}
 
-จงคาดการณ์เลขเด็ดสำหรับงวดถัดไป โดยให้ผลลัพธ์ในโครงสร้างนี้:
-- เด่นตัวเดียว: x
-- เด่นรอง: x
-- เลข 2 ตัว: xx, xx, xx
-- เลข 3 ตัว: xxx, xxx
-(ห้ามเกินโครงสร้างนี้ และอย่าใส่คำอธิบายเพิ่ม) 
-    `;
+ผู้ใช้ถามว่า: "${question}"
+โปรดตอบเป็นภาษาธรรมชาติสั้นๆ เช่น:
+"เลข 3 ตัวเด่นคือ 752"
+`;
 
-    // 4) เรียก OpenAI API
-    const completion = await openai.chat.completions.create({
+    const aiRes = await openai.chat.completions.create({
       model: "gpt-4o-mini",
-      messages: [{ role: "system", content: prompt }],
-      max_tokens: 300,
-      temperature: 0.8,
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: 150,
     });
 
-    const message =
-      completion.choices[0].message?.content || "❌ ไม่สามารถสร้างผลลัพธ์ได้";
+    const answer = aiRes.choices[0]?.message?.content || "ไม่สามารถวิเคราะห์ได้";
 
-    // 5) ส่งกลับ client
-    return NextResponse.json({ success: true, message });
-  } catch (err: any) {
-    console.error("TipyaLek API Error:", err);
-    return NextResponse.json(
-      { success: false, error: "API error", details: err.message },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      question,
+      answer,
+      raw: data, // ส่งดิบกลับไปด้วย เผื่อ debug
+    });
+  } catch (error: any) {
+    console.error("API Error:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
