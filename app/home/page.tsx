@@ -188,20 +188,22 @@ export default function HomePage() {
         ))}
       </div>
       
-      {/* เทพ AI แยกออกมา */}
-      <div className="grid grid-cols-1 gap-5 mb-10">
-        {GODS_AI.map((g) => (
-          <button
-            key={g.id}
-            onClick={() => router.push(`/fortune/tipyalek`)} // ✅ วิ่งไปที่โฟลเดอร์ใหม่
-            className={`p-6 rounded-xl shadow bg-gradient-to-r ${g.color} text-lg font-semibold hover:brightness-105 transition`}
-          >
-            {g.name}
-          </button>
-        ))}
+      <div className="flex justify-center my-6">
+        <button
+          className="w-48 h-48 bg-gradient-to-br from-purple-400 via-purple-500 to-purple-700 
+                    text-white font-bold rounded-xl shadow-lg hover:scale-105 transform transition 
+                    flex flex-col items-center justify-center text-center p-4"
+          onClick={() => router.push("/fortune/tipyalek")}
+        >
+          <span className="text-xl">🔮 องค์ทิพยเลข</span>
+          <p className="text-sm mt-2">
+            ห้องสนทนากับองค์ทิพยเลข<br />
+            ถามได้ทั้งเลขเด็ด ดูดวง และคำทำนายส่วนตัว<br />
+            ไม่ใช่การสุ่มเลข แต่ใช้สถิติจริง + การพยากรณ์
+          </p>
+        </button>
       </div>
-
-      
+     
       {/* Debug log */}
       {(() => {
         console.log("Render check role:", udoc?.role);
