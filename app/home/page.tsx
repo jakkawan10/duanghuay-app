@@ -150,6 +150,7 @@ export default function HomePage() {
 
     alert("ส่งคำขอ Tipyalek แล้ว กรุณาอัปโหลดสลิป/แจ้งแอดมินเพื่ออนุมัติสิทธิ์");
     setShowTipyalekPay(false);
+    router.push("/upload-slip");
   };
   
   if (loading) {
