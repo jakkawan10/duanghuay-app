@@ -188,21 +188,23 @@ export default function HomePage() {
         ))}
       </div>
       
-      <div className="flex justify-center my-6">
+      {/* ปุ่ม องค์ทิพยเลข */}
+      <div className="flex justify-center mb-10">
         <button
-          className="w-48 h-48 bg-gradient-to-br from-purple-400 via-purple-500 to-purple-700 
-                    text-white font-bold rounded-xl shadow-lg hover:scale-105 transform transition 
-                    flex flex-col items-center justify-center text-center p-4"
-          onClick={() => router.push("/fortune/tipyalek")}
+          onClick={() => router.push(`/fortune/tipyalek`)}
+          className="w-64 h-64 p-6 rounded-2xl shadow-lg 
+                    bg-gradient-to-r from-purple-500 to-pink-500 
+                    text-white font-bold text-center whitespace-pre-line 
+                    hover:scale-105 transition transform"
         >
-          <span className="text-xl">🔮 องค์ทิพยเลข</span>
-          <p className="text-sm mt-2">
-            ห้องสนทนากับองค์ทิพยเลข<br />
-            ถามได้ทั้งเลขเด็ด ดูดวง และคำทำนายส่วนตัว<br />
-            ไม่ใช่การสุ่มเลข แต่ใช้สถิติจริง + การพยากรณ์
-          </p>
+          ✨ องค์ทิพยเลข ✨{"\n"}
+          ห้องสนทนาพิเศษ ถามได้ทั้งเลขเด็ด{"\n"}
+          ดูดวง และคำทำนายส่วนตัว{"\n"}
+          ไม่ใช่คำพูดสุ่ม แต่ใช้{"\n"}
+          สถิติจริง + การพยากรณ์
         </button>
       </div>
+
      
       {/* Debug log */}
       {(() => {
