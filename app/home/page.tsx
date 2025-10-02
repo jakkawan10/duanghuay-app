@@ -197,7 +197,7 @@ export default function HomePage() {
           <div className="bg-white w-full max-w-3xl rounded-2xl p-6">
             <h4 className="text-xl font-bold text-center mb-4">ปลดล็อกเทพเพิ่ม (1 เดือน)</h4>
             <div className="grid md:grid-cols-3 gap-4">
-              {[1, 2, 3].map((t) => (
+              {([1, 2, 3] as (1 | 2 | 3)[]).map((t) => (
                 <div
                   key={t}
                   className={`rounded-xl border p-4 text-center ${
@@ -212,13 +212,14 @@ export default function HomePage() {
                     className="w-full max-w-[220px] mx-auto rounded mb-3 border"
                   />
                   <button
-                    onClick={() => requestPayment(t as 1 | 2 | 3)}
+                    onClick={() => requestPayment(t)}
                     className="px-4 py-2 rounded bg-black text-white hover:opacity-90"
                   >
                     ชำระด้วย QR นี้
                   </button>
                 </div>
               ))}
+
             </div>
             <div className="text-center mt-4">
               <button onClick={() => setShowPay(false)} className="px-4 py-2 rounded border">
