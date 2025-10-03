@@ -1,69 +1,61 @@
-import { NextRequest, NextResponse } from "next/server";
-import Omise from "omise";
-import { adminDb } from "@/lib/firebaseAdmin";
-import { Timestamp } from "firebase/firestore";
+import { NextResponse } from "next/server";
+import { db } from "@/lib/firebase";
+import { doc, setDoc, serverTimestamp, Timestamp } from "firebase/firestore";
 
-const omise = Omise({ secretKey: process.env.OMISE_SECRET_KEY! });
+// 🚨 ต้องใช้ Secret Key ของ Omise
+const OMISE_SECRET = process.env.OMISE_SECRET_KEY!;
 
-// *** Omise จะส่ง Event มา เราจะดึง event.id -> call API ย้อนกลับเพื่อ verify ***
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   try {
-    const payload = await req.json();
+    const body = await req.json();
 
-    // โครงสร้าง event: { id: 'evt_*', key: 'event', data: {...}, ... }
-    const eventId = payload?.id;
-    if (!eventId) {
-      return NextResponse.json({ ok: true });
+    // Omise ส่ง event มา เช่น charge.complete
+    const event = body.data || {};
+    const chargeId = event.id;
+    const status = event.status;
+    const metadata = event.metadata || {};
+    const userId = metadata.userId;
+    const product = metadata.product;
+
+    console.log("Webhook received:", { chargeId, status, userId, product });
+
+    if (!userId || !product) {
+      return NextResponse.json({ error: "Missing userId or product" }, { status: 400 });
     }
 
-    const event = await omise.events.retrieve(eventId);
-    // สนใจ event "charge.complete"
-    if (event.key === "event" && event.data?.object === "charge") {
-      const charge = event.data;
-      const chargeId = charge.id as string;
-      const status = charge.status as string;
+    if (status === "successful") {
+      // ถ้าเป็น Tipyalek → เปิด session 1 ชั่วโมง
+      if (product === "tipyalek") {
+        const expireAt = Timestamp.fromMillis(Date.now() + 60 * 60 * 1000);
 
-      // อัปเดตสถานะ payments
-      const payRef = adminDb.collection("payments").doc(chargeId);
-      const paySnap = await payRef.get();
-      if (!paySnap.exists) {
-        // ไม่รู้จักออเดอร์เรา แต่เพื่อความปลอดภัย log ไว้
-        console.warn("Webhook: payment not found", chargeId);
-        return NextResponse.json({ ok: true });
-      }
-
-      await payRef.update({
-        status,
-        updatedAt: Timestamp.now(),
-      });
-
-      if (status === "successful") {
-        const userId = charge.metadata?.userId as string;
-        const product = charge.metadata?.product as string;
-
-        if (product === "tipyalek" && userId) {
-          // สร้าง session 60 นาที
-          const now = new Date();
-          const end = new Date(now.getTime() + 60 * 60 * 1000);
-
-          await adminDb.collection("sessions").add({
-            userId,
-            deity: "tipyalek",
+        await setDoc(
+          doc(db, "users", userId, "sessions", "tipyalek"),
+          {
             status: "active",
-            amount: 299,
-            startTime: Timestamp.fromDate(now),
-            endTime: Timestamp.fromDate(end),
-            createdAt: Timestamp.now(),
-          });
+            expireAt,
+            createdAt: serverTimestamp(),
+          },
+          { merge: true }
+        );
+      }
 
-          // (ออปชั่น) ส่ง notification/inbox ให้ user ทราบสิทธิ์พร้อมใช้งาน
-        }
+      // 👉 เพิ่ม logic ถ้าเป็นแพ็กเกจ 4 เทพ (159/259/299)
+      if (product.startsWith("god-")) {
+        await setDoc(
+          doc(db, "users", userId),
+          {
+            planTier: Number(product.replace("god-", "")),
+            expireAt: Timestamp.fromMillis(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 วัน
+            updatedAt: serverTimestamp(),
+          },
+          { merge: true }
+        );
       }
     }
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ received: true });
   } catch (e: any) {
-    console.error("webhook error:", e);
-    return NextResponse.json({ error: e.message || "webhook failed" }, { status: 500 });
+    console.error("Webhook error:", e);
+    return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
