@@ -43,12 +43,17 @@ export default function HomePage() {
   const [udoc, setUdoc] = useState<UserDoc | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Modal state
+  // Modal ปกติ (1–3 เทพ)
   const [showPay, setShowPay] = useState(false);
   const [pendingGod, setPendingGod] = useState<string | null>(null);
 
-  // 🆕 Modal Tipyalek
-  const [showTipyalekPay, setShowTipyalekPay] = useState(false);
+  // Modal Tipyalek (Dynamic QR)
+  const [showTipyaQR, setShowTipyaQR] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [qrImage, setQrImage] = useState<string | null>(null);
+  const [payStatus, setPayStatus] = useState<
+    "idle" | "pending" | "successful" | "failed"
+  >("idle");
 
   useEffect(() => {
     const load = async () => {
@@ -120,7 +125,6 @@ export default function HomePage() {
 
   const requestPayment = async (tier: 1 | 2 | 3) => {
     if (!user) return;
-
     const base = collection(db, "users", user.uid, "payment_requests");
     await addDoc(base, {
       tier,
@@ -130,38 +134,38 @@ export default function HomePage() {
       createdAt: serverTimestamp(),
       status: "pending",
     });
-
     alert("ส่งคำขอชำระเงินแล้ว กรุณาอัปโหลดสลิป/แจ้งแอดมินเพื่ออนุมัติสิทธิ์");
     setShowPay(false);
   };
 
-  // 🆕 ฟังก์ชันขอจ่าย Tipyalek
-  const requestPaymentTipyalek = async () => {
-    if (!user) return;
-
-    const base = collection(db, "users", user.uid, "payment_requests");
-    await addDoc(base, {
-      type: "tipyalek",
-      price: 299,
-      duration: 60, // นาที
-      createdAt: serverTimestamp(),
-      status: "pending",
-    });
-
-    alert("ส่งคำขอ Tipyalek แล้ว กรุณาอัปโหลดสลิป/แจ้งแอดมินเพื่ออนุมัติสิทธิ์");
-    setShowTipyalekPay(false);
-    router.push("/upload-slip");
-  };
-  
-  if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center text-xl">
-        กำลังโหลด...
-      </div>
-    );
+  async function openTipyaPay() {
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+    setShowTipyaQR(true);
+    try {
+      setCreating(true);
+      const res = await fetch("/api/payments/create-qr", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.uid, product: "tipyalek", amount: 299 }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Create QR failed");
+      setQrImage(json.qrImage);
+      setPayStatus("pending");
+    } catch (e: any) {
+      alert(e.message || "ไม่สามารถสร้าง QR ได้");
+    } finally {
+      setCreating(false);
+    }
   }
-  
-  console.log("udoc state:", udoc); 
+
+  if (loading) return <div className="p-10 text-center">กำลังโหลด...</div>;
+
+  console.log("udoc state:", udoc);
+
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <h2 className="text-center font-bold mb-6">
@@ -180,30 +184,24 @@ export default function HomePage() {
           </button>
         ))}
       </div>
-      
-      {/* ปุ่มพิเศษ Tipyalek */}
+
+      {/* ปุ่ม องค์ทิพยเลข */}
       <div className="flex justify-center mb-10">
         <button
-          onClick={() => setShowTipyalekPay(true)}
+          onClick={openTipyaPay}
           className="w-64 h-64 p-6 rounded-2xl shadow-lg 
-                    bg-gradient-to-r from-purple-500 to-pink-500 
-                    text-white font-bold text-center whitespace-pre-line 
-                    hover:scale-105 transition transform"
+            bg-gradient-to-r from-purple-500 to-pink-500 
+            text-white font-bold text-center whitespace-pre-line 
+            hover:scale-105 transition transform"
         >
           ✨ องค์ทิพยเลข ✨{"\n"}
-          ห้องสนทนาพิเศษ 299 บาท{"\n"}
-          ใช้งานได้ 1 ชั่วโมงเต็ม{"\n"}
-          ดูดวง + ถามเลขเด็ดเฉพาะ
+          ห้องสนทนาพิเศษ ถามได้ทั้งเลขเด็ด{"\n"}
+          ดูดวง และคำทำนายส่วนตัว{"\n"}
+          ใช้สถิติจริง + การพยากรณ์
         </button>
       </div>
 
-     
-      {/* Debug log */}
-      {(() => {
-        console.log("Render check role:", udoc?.role);
-        return null;   // ✅ ต้อง return ReactNode (ที่นี่คืน null)
-      })()}
-
+      {/* Admin Zone */}
       {udoc?.role === "admin" && (
         <>
           <h3 className="text-center font-bold mb-4">🔑 Admin Zone</h3>
@@ -218,8 +216,6 @@ export default function HomePage() {
               </button>
             ))}
           </div>
-
-          {/* ปุ่มพิเศษให้ Admin ดูผลเลขทุกเทพ */}
           <div className="text-center mt-8">
             <button
               onClick={() => router.push("/admin/overview")}
@@ -230,47 +226,17 @@ export default function HomePage() {
           </div>
         </>
       )}
-      
-      {/* Modal Tipyalek (299 บาท / 1 ชั่วโมง) */}
-      {showTipyalekPay && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-white w-full max-w-md rounded-2xl p-6">
-            <h4 className="text-xl font-bold text-center mb-4">💫 ซื้อสิทธิ์คุยกับองค์ทิพยเลข</h4>
-            <p className="text-center text-gray-600 mb-4">
-              จ่ายครั้งละ <b>299 บาท</b> ใช้ได้ <b>1 ชั่วโมง</b>
-            </p>
-            <img
-              src="/qr-tipyalek.jpg"
-              alt="QR 299 บาท"
-              className="w-full max-w-[220px] mx-auto rounded mb-3 border"
-            />
-            <button
-              onClick={requestPaymentTipyalek}
-              className="w-full px-4 py-2 rounded bg-purple-600 text-white hover:opacity-90"
-            >
-              ✅ ยืนยันการชำระเงิน
-            </button>
-            <div className="flex justify-center mt-4">
-              <button onClick={() => setShowTipyalekPay(false)} className="px-4 py-2 rounded border">
-                ปิด
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      
-      {/* Payment Modal */}
+
+      {/* Modal 1–3 เทพ */}
       {showPay && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-white w-full max-w-3xl rounded-2xl p-6 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white w-full max-w-3xl rounded-2xl p-6">
             <h4 className="text-xl font-bold text-center mb-2">
               ปลดล็อกเทพเพิ่ม (อายุสิทธิ์ 1 เดือน)
             </h4>
             <p className="text-center text-gray-600 mb-6">
               ตอนนี้คุณปลดเพิ่มแล้ว {extraUsed} เทพ • แผนปัจจุบันรองรับ {slots} เทพ
             </p>
-
             <div className="grid md:grid-cols-3 gap-4">
               {[1, 2, 3].map((t) => (
                 <div
@@ -279,15 +245,11 @@ export default function HomePage() {
                     t === recommendedTier ? "ring-2 ring-amber-400" : ""
                   }`}
                 >
-                  <div className="text-lg font-semibold mb-1">
-                    ปลดล็อกเพิ่ม {t} เทพ
-                  </div>
-                  <div className="text-2xl font-extrabold mb-2">
-                    {PRICING[t as 1 | 2 | 3]}฿/เดือน
-                  </div>
+                  <div className="text-lg font-semibold mb-1">ปลดล็อกเพิ่ม {t} เทพ</div>
+                  <div className="text-2xl font-extrabold mb-2">{PRICING[t]}฿/เดือน</div>
                   <img
-                    src={QR_IMAGES[t as 1 | 2 | 3]}
-                    alt={`QR ${PRICING[t as 1 | 2 | 3]} บาท`}
+                    src={QR_IMAGES[t]}
+                    alt={`QR ${PRICING[t]} บาท`}
                     className="w-full max-w-[220px] mx-auto rounded mb-3 border"
                   />
                   <button
@@ -299,17 +261,45 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
-
-            <p className="text-center text-sm text-gray-500 mt-4">
-              หลังชำระแล้ว กด “ส่งคำขอชำระเงิน” ระบบจะรอแอดมินยืนยันสิทธิ์ (อัปเดตแผนและวันหมดอายุให้)
-            </p>
-
-            <div className="flex justify-center gap-3 mt-5">
-              <button
-                className="px-4 py-2 rounded border"
-                onClick={() => setShowPay(false)}
-              >
+            <div className="flex justify-center mt-5">
+              <button className="px-4 py-2 rounded border" onClick={() => setShowPay(false)}>
                 ปิด
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Tipyalek */}
+      {showTipyaQR && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-white w-full max-w-md rounded-2xl p-6">
+            <h3 className="text-xl font-bold text-center mb-2">ซื้อสิทธิ์คุยกับองค์ทิพยเลข</h3>
+            <p className="text-center text-sm mb-4">299 บาท / 1 ชั่วโมง</p>
+            <div className="flex flex-col items-center justify-center border p-3 mb-4">
+              {creating && <div>กำลังสร้าง QR...</div>}
+              {!creating && qrImage && <img src={qrImage} alt="QR" className="w-56 h-56" />}
+            </div>
+            {payStatus === "pending" && (
+              <div className="text-center text-yellow-700">รอการชำระเงิน...</div>
+            )}
+            {payStatus === "successful" && (
+              <div className="text-center text-green-700 font-bold">
+                ✅ จ่ายเงินสำเร็จ! เข้าห้องได้แล้ว
+              </div>
+            )}
+            {payStatus === "failed" && (
+              <div className="text-center text-red-600 font-bold">❌ จ่ายไม่สำเร็จ</div>
+            )}
+            <div className="flex justify-center gap-2 mt-5">
+              <button className="px-4 py-2 rounded border" onClick={() => setShowTipyaQR(false)}>
+                ปิด
+              </button>
+              <button
+                className="px-4 py-2 rounded bg-purple-600 text-white"
+                onClick={() => router.push("/fortune/tipyalek")}
+              >
+                เข้าห้ององค์ทิพยเลข
               </button>
             </div>
           </div>
