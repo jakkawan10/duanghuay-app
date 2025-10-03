@@ -54,7 +54,36 @@ export default function HomePage() {
   const [payStatus, setPayStatus] = useState<
     "idle" | "pending" | "successful" | "failed"
   >("idle");
+  
+  // ฟังก์ชันเรียก API สร้าง QR
+  const createQR = async () => {
+    try {
+      setCreating(true);
+      setPayStatus("pending");
 
+      const res = await fetch("/api/payments/qr-tipyalek", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: 29900 }), // 299 บาท = 29900 สตางค์
+      });
+
+      const data = await res.json();
+      console.log("Omise response:", data);
+
+      if (res.ok && data.qr) {
+        setQrImage(data.qr);
+        setPayStatus("pending");
+      } else {
+        setPayStatus("failed");
+      }
+    } catch (e) {
+      console.error(e);
+      setPayStatus("failed");
+    } finally {
+      setCreating(false);
+    }
+  };
+  
   useEffect(() => {
     const load = async () => {
       if (!user) {
@@ -271,10 +300,12 @@ export default function HomePage() {
           <div className="bg-white w-full max-w-md rounded-2xl p-6">
             <h3 className="text-xl font-bold text-center mb-2">ซื้อสิทธิ์คุยกับองค์ทิพยเลข</h3>
             <p className="text-center text-sm mb-4">299 บาท / 1 ชั่วโมง</p>
+
             <div className="flex flex-col items-center justify-center border p-3 mb-4">
               {creating && <div>กำลังสร้าง QR...</div>}
               {!creating && qrImage && <img src={qrImage} alt="QR" className="w-56 h-56" />}
             </div>
+
             {payStatus === "pending" && (
               <div className="text-center text-yellow-700">รอการชำระเงิน...</div>
             )}
@@ -286,6 +317,7 @@ export default function HomePage() {
             {payStatus === "failed" && (
               <div className="text-center text-red-600 font-bold">❌ จ่ายไม่สำเร็จ</div>
             )}
+
             <div className="flex justify-center gap-2 mt-5">
               <button className="px-4 py-2 rounded border" onClick={() => setShowTipyaQR(false)}>
                 ปิด
@@ -297,6 +329,18 @@ export default function HomePage() {
                 เข้าห้ององค์ทิพยเลข
               </button>
             </div>
+
+            {/* ปุ่มสร้าง QR */}
+            {!qrImage && (
+              <div className="mt-4 text-center">
+                <button
+                  onClick={createQR}
+                  className="px-4 py-2 bg-green-600 text-white rounded"
+                >
+                  สร้าง QR สำหรับจ่ายเงิน
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
