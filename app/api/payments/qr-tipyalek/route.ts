@@ -15,7 +15,7 @@ export async function POST(req: Request) {
 
     console.log("🔑 Using Secret Key:", process.env.OMISE_SECRET_KEY?.slice(0, 6));
 
-    // สร้าง Source สำหรับ PromptPay
+    // ✅ สร้าง Source
     const source = await omise.sources.create({
       amount: 29900, // หน่วยเป็นสตางค์ → 299 บาท
       currency: "thb",
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
 
     console.log("✅ Source created:", source.id);
 
-    // สร้าง Charge
+    // ✅ สร้าง Charge
     const charge = await omise.charges.create({
       amount: 29900,
       currency: "thb",
@@ -34,13 +34,18 @@ export async function POST(req: Request) {
 
     console.log("✅ Charge created:", charge.id);
 
-    // ส่ง QR กลับไปให้ฝั่ง Client
+    // เช็คว่ามี QR หรือไม่
+    const qrImage = charge?.source?.scannable_code?.image?.download_uri || null;
+
     return NextResponse.json({
       chargeId: charge.id,
-      qr: charge.source.scannable_code.image.download_uri,
+      qr: qrImage,
     });
   } catch (err: any) {
     console.error("❌ Omise error:", err);
-    return NextResponse.json({ error: "payment failed", detail: err.message }, { status: 500 });
+    return NextResponse.json(
+      { error: "payment failed", detail: err.message },
+      { status: 500 }
+    );
   }
 }
