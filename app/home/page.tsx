@@ -238,13 +238,8 @@ export default function HomePage() {
               ตอนนี้คุณปลดเพิ่มแล้ว {extraUsed} เทพ • แผนปัจจุบันรองรับ {slots} เทพ
             </p>
             <div className="grid md:grid-cols-3 gap-4">
-              {[1, 2, 3].map((t) => (
-                <div
-                  key={t}
-                  className={`rounded-xl border p-4 text-center ${
-                    t === recommendedTier ? "ring-2 ring-amber-400" : ""
-                  }`}
-                >
+              {([1, 2, 3] as (1 | 2 | 3)[]).map((t) => (
+                <div key={t} className="rounded-xl border p-4 text-center">
                   <div className="text-lg font-semibold mb-1">ปลดล็อกเพิ่ม {t} เทพ</div>
                   <div className="text-2xl font-extrabold mb-2">{PRICING[t]}฿/เดือน</div>
                   <img
@@ -253,7 +248,7 @@ export default function HomePage() {
                     className="w-full max-w-[220px] mx-auto rounded mb-3 border"
                   />
                   <button
-                    onClick={() => requestPayment(t as 1 | 2 | 3)}
+                    onClick={() => requestPayment(t)}
                     className="px-4 py-2 rounded bg-black text-white hover:opacity-90"
                   >
                     ชำระด้วย QR นี้
