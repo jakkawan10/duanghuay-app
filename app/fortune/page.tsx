@@ -14,7 +14,7 @@ export default function TipyalekPage() {
 
   useEffect(() => {
     if (!user) {
-      router.push("/login");
+      router.replace("/login");
       return;
     }
 
@@ -22,24 +22,24 @@ export default function TipyalekPage() {
       try {
         const ref = doc(db, "users", user.uid, "sessions", "tipyalek");
         const snap = await getDoc(ref);
+
         if (snap.exists()) {
           const d = snap.data();
-          const now = Date.now();
           const expire = d.expireAt?.toMillis?.() ?? 0;
 
-          if (d.status === "active" && expire > now) {
+          if (d.status === "active" && expire > Date.now()) {
             setAllowed(true);
           } else {
-            router.push("/home");
             alert("สิทธิ์หมดอายุ กรุณาชำระเงินใหม่");
+            router.replace("/home");
           }
         } else {
-          router.push("/home");
           alert("คุณยังไม่ได้ชำระสิทธิ์เข้าใช้งานองค์ทิพยเลข");
+          router.replace("/home");
         }
       } catch (e) {
-        console.error(e);
-        router.push("/home");
+        console.error("Error checking access:", e);
+        router.replace("/home");
       } finally {
         setLoading(false);
       }
@@ -48,10 +48,7 @@ export default function TipyalekPage() {
     checkAccess();
   }, [user, router]);
 
-  if (loading) {
-    return <div className="p-6 text-center">กำลังตรวจสอบสิทธิ์...</div>;
-  }
-
+  if (loading) return <div className="p-6 text-center">กำลังตรวจสอบสิทธิ์...</div>;
   if (!allowed) return null;
 
   return (
