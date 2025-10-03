@@ -7,24 +7,29 @@ const omise = Omise({
 
 export async function POST(req: Request) {
   try {
-    const { amount, userId } = await req.json();
+    const { userId } = await req.json();
 
-    // สร้าง charge แบบ QR PromptPay
-    const charge = await omise.charges.create({
-      amount, // เช่น 29900 (299 บาท)
+    // 1) สร้าง Source (PromptPay)
+    const source = await omise.sources.create({
+      type: "promptpay",
+      amount: 29900,   // 299 บาท
       currency: "thb",
-      source: {
-        type: "promptpay",
-      },
-      metadata: { userId, session: "tipyalek" },
     });
 
-    return NextResponse.json({
-      qr: charge.source.scannable_code.image.download_uri,
-      chargeId: charge.id,
+    // 2) ใช้ source.id ไปสร้าง Charge
+    const charge = await omise.charges.create({
+      amount: 29900,
+      currency: "thb",
+      source: source.id,
+      metadata: {
+        userId,
+        session: "tipyalek",
+      },
     });
-  } catch (error: any) {
-    console.error("Omise Error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+
+    return NextResponse.json({ charge });
+  } catch (e: any) {
+    console.error("Create QR failed:", e);
+    return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
