@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import Omise from "omise";
 
 const omise = Omise({
-  secretKey: process.env.OMISE_SECRET_KEY || "",
+  secretKey: "skey_test_65969y1tpiq8samm8yf",
 });
+
 
 export async function POST(req: Request) {
   try {
