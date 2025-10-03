@@ -13,11 +13,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "missing userId" }, { status: 400 });
     }
 
-    console.log("🔑 Using Secret Key:", process.env.OMISE_SECRET_KEY?.slice(0, 6));
+    // 🔍 Debug Key
+    console.log("🔑 Raw Secret Key:", JSON.stringify(process.env.OMISE_SECRET_KEY));
+    console.log("🔑 Secret Key Prefix:", process.env.OMISE_SECRET_KEY?.slice(0, 10));
 
     // ✅ สร้าง Source
     const source = await omise.sources.create({
-      amount: 29900, // หน่วยเป็นสตางค์ → 299 บาท
+      amount: 29900, // 299 บาท (หน่วยเป็นสตางค์)
       currency: "thb",
       type: "promptpay",
     });
@@ -34,7 +36,7 @@ export async function POST(req: Request) {
 
     console.log("✅ Charge created:", charge.id);
 
-    // เช็คว่ามี QR หรือไม่
+    // ✅ ดึง QR
     const qrImage = charge?.source?.scannable_code?.image?.download_uri || null;
 
     return NextResponse.json({
