@@ -2,18 +2,16 @@ import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
-    console.log("DEBUG: เริ่มต้นสร้าง QR...");
-
-    // 👀 ตรวจสอบว่า key มีจริงไหม
-    console.log("DEBUG: typeof OMISE_SECRET_KEY =", typeof process.env.OMISE_SECRET_KEY);
-    console.log("DEBUG: OMISE_SECRET_KEY length =", process.env.OMISE_SECRET_KEY?.length || 0);
-
-    if (!process.env.OMISE_SECRET_KEY) {
-      throw new Error("❌ Missing OMISE_SECRET_KEY in environment variables");
-    }
-
     const body = await req.json();
     console.log("DEBUG: Request body =", body);
+
+    if (!process.env.OMISE_SECRET_KEY) {
+      throw new Error("❌ Missing OMISE_SECRET_KEY");
+    }
+
+    // ✅ แปลงจากบาท → satang
+    const amountInSatang = body.amount * 100;
+    console.log("DEBUG: amount (baht) =", body.amount, " → (satang) =", amountInSatang);
 
     const res = await fetch("https://api.omise.co/charges", {
       method: "POST",
@@ -22,7 +20,7 @@ export async function POST(req: Request) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        amount: body.amount,
+        amount: amountInSatang,
         currency: "thb",
         source: { type: "promptpay" },
       }),
