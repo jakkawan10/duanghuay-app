@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { db } from "@/lib/firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { collection, query, where, getDocs } from "firebase/firestore";
 import { useAuth } from "@/lib/hooks/useAuth";
 
 export default function TipyalekPage() {
@@ -20,14 +20,27 @@ export default function TipyalekPage() {
 
     const checkAccess = async () => {
       try {
-        const ref = doc(db, "users", user.uid, "sessions", "tipyalek");
-        const snap = await getDoc(ref);
+        const q = query(
+          collection(db, "sessions"),
+          where("userId", "==", user.uid),
+          where("deity", "==", "tipyalek"),
+          where("status", "==", "active")
+        );
 
-        if (snap.exists()) {
-          const d = snap.data();
-          const expire = d.expireAt?.toMillis?.() ?? 0;
+        const snap = await getDocs(q);
 
-          if (d.status === "active" && expire > Date.now()) {
+        if (!snap.empty) {
+          // เจอ session ที่ active
+          let valid = false;
+          snap.forEach((doc) => {
+            const d = doc.data();
+            const expire = d.endTime?.toMillis?.() ?? 0;
+            if (expire > Date.now()) {
+              valid = true;
+            }
+          });
+
+          if (valid) {
             setAllowed(true);
           } else {
             alert("สิทธิ์หมดอายุ กรุณาชำระเงินใหม่");

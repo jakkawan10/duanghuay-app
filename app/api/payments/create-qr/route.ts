@@ -1,41 +1,82 @@
 import { NextResponse } from "next/server";
+import { db } from "@/lib/firebase";
+import { collection, addDoc } from "firebase/firestore";
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    console.log("DEBUG: Request body =", body);
-
-    if (!process.env.OMISE_SECRET_KEY) {
-      throw new Error("❌ Missing OMISE_SECRET_KEY");
+    const { userId } = await req.json();
+    if (!userId) {
+      return NextResponse.json({ error: "missing userId" }, { status: 400 });
     }
 
-    // ✅ แปลงจากบาท → satang
-    const amountInSatang = body.amount * 100;
-    console.log("DEBUG: amount (baht) =", body.amount, " → (satang) =", amountInSatang);
+    // 🔑 ตรวจสอบว่า key มีจริงไหม
+    if (!process.env.OMISE_SECRET_KEY) {
+      console.error("❌ Missing OMISE_SECRET_KEY");
+      return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
+    }
 
-    const res = await fetch("https://api.omise.co/charges", {
+    // 🔹 สร้าง Source → PromptPay
+    const sourceRes = await fetch("https://api.omise.co/sources", {
       method: "POST",
       headers: {
-        Authorization: "Basic " + Buffer.from(process.env.OMISE_SECRET_KEY + ":").toString("base64"),
+        Authorization:
+          "Basic " + Buffer.from(process.env.OMISE_SECRET_KEY + ":").toString("base64"),
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        amount: amountInSatang,
+        amount: 29900, // 299 บาท → หน่วยสตางค์
         currency: "thb",
-        source: { type: "promptpay" },
+        type: "promptpay",
       }),
     });
 
-    const data = await res.json();
-    console.log("DEBUG: Omise response =", data);
-
-    if (!res.ok) {
-      throw new Error("Omise API error: " + JSON.stringify(data));
+    const source = await sourceRes.json();
+    if (source.object === "error") {
+      console.error("❌ Source error:", source);
+      return NextResponse.json(source, { status: 500 });
     }
 
-    return NextResponse.json(data);
+    // 🔹 สร้าง Charge
+    const chargeRes = await fetch("https://api.omise.co/charges", {
+      method: "POST",
+      headers: {
+        Authorization:
+          "Basic " + Buffer.from(process.env.OMISE_SECRET_KEY + ":").toString("base64"),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        amount: 29900,
+        currency: "thb",
+        source: source.id,
+        metadata: { userId, deity: "tipyalek" },
+      }),
+    });
+
+    const charge = await chargeRes.json();
+    if (charge.object === "error") {
+      console.error("❌ Charge error:", charge);
+      return NextResponse.json(charge, { status: 500 });
+    }
+
+    // 🔹 สร้าง Session ใน Firestore (pending)
+    const sessionDoc = await addDoc(collection(db, "sessions"), {
+      userId,
+      deity: "tipyalek",
+      status: "pending",
+      amount: 299,
+      chargeId: charge.id,
+      createdAt: new Date(),
+    });
+
+    const qrImage = charge?.source?.scannable_code?.image?.download_uri || null;
+
+    return NextResponse.json({
+      sessionId: sessionDoc.id,
+      chargeId: charge.id,
+      qr: qrImage,
+    });
   } catch (err: any) {
-    console.error("ERROR in create-qr:", err.message || err);
-    return NextResponse.json({ error: err.message || "Unknown error" }, { status: 500 });
+    console.error("❌ Create QR error:", err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
