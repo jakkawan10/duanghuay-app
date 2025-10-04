@@ -59,7 +59,8 @@ export async function POST(req: Request) {
     }
 
     // 🔹 สร้าง Session ใน Firestore (pending)
-    const sessionDoc = await addDoc(collection(db, "sessions"), {
+    const sessionRef = adminDb.collection("sessions").doc();
+    await sessionRef.set({
       userId,
       deity: "tipyalek",
       status: "pending",
@@ -67,6 +68,7 @@ export async function POST(req: Request) {
       chargeId: charge.id,
       createdAt: new Date(),
     });
+
 
     const qrImage = charge?.source?.scannable_code?.image?.download_uri || null;
 
