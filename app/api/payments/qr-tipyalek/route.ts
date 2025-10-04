@@ -1,45 +1,55 @@
 import { NextResponse } from "next/server";
-import { adminDb } from "@/lib/firebaseAdmin";
+import Omise from "omise";
+import { adminDb } from "@/lib/firebaseAdmin"; // ✅ path ที่ถูกต้องของโปรเจ็กต์พี่
+
+export const runtime = "nodejs"; // firebase-admin & omise ต้องรันบน Node.js
+
+const omise = Omise({
+  secretKey: process.env.OMISE_SECRET_KEY!,
+});
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { userId } = body;
+    const { userId } = await req.json();
 
-    if (!userId) {
-      return NextResponse.json(
-        { error: "Missing userId" },
-        { status: 400 }
-      );
+    // 1) สร้าง source promptpay ก่อน
+    const source = await omise.sources.create({
+      amount: 29900,
+      currency: "thb",
+      type: "promptpay",
+    });
+
+    // 2) เอา source.id ไปสร้าง charge
+    const charge = await omise.charges.create({
+      amount: 29900,
+      currency: "thb",
+      source: source.id,
+      return_uri: "https://duanghuay-app-seven.vercel.app/home",
+    });
+
+    // 3) ดึง URL ของ QR
+    const qr = charge?.source?.scannable_code?.image?.download_uri;
+    if (!qr) {
+      throw new Error("ไม่พบ QR image จาก Omise");
     }
 
-    // 🕒 เวลาหมดอายุ +1 ชั่วโมง
-    const startTime = new Date();
-    const endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
-
-    // 🔹 สร้าง Session ใหม่ใน collection "sessions"
-    const sessionRef = adminDb.collection("sessions").doc();
-    await sessionRef.set({
+    // 4) บันทึก session ลง Firestore ด้วย Admin SDK
+    await adminDb.collection("sessions").doc(charge.id).set({
       userId,
       deity: "tipyalek",
-      status: "active", // ตรงนี้จะเปลี่ยนเป็น active หลังจาก webhook จ่ายเงินก็ได้
+      status: "pending",
       amount: 299,
-      startTime,
-      endTime,
+      chargeId: charge.id,
       createdAt: new Date(),
     });
 
-    console.log("✅ Session created:", sessionRef.id);
-
     return NextResponse.json({
-      message: "Session created",
-      sessionId: sessionRef.id,
+      sessionId: charge.id,
+      chargeId: charge.id,
+      qr, // ให้หน้า UI <img src={qr}> ได้เลย
     });
   } catch (err: any) {
-    console.error("❌ Error in qr-tipyalek route:", err);
-    return NextResponse.json(
-      { error: err.message || "Internal Server Error" },
-      { status: 500 }
-    );
+    console.error("❌ Error /qr-tipyalek:", err);
+    return NextResponse.json({ error: err.message ?? "unknown error" }, { status: 400 });
   }
 }
