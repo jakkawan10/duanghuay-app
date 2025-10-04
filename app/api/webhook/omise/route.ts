@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/firebase";
+import { adminDb } from "@/lib/firebaseAdmin";
 import { doc, setDoc } from "firebase/firestore";
 
 // ⚠️ ต้องไปตั้งค่า Webhook URL ใน Omise Dashboard

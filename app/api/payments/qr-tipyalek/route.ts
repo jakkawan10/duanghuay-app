@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/firebase"; // ต้องมีไฟล์ config firebase client/admin
+import { adminDb } from "@/lib/firebaseAdmin";// ต้องมีไฟล์ config firebase client/admin
 import { doc, setDoc, serverTimestamp, Timestamp } from "firebase/firestore";
 
 // Helper: encode key เป็น Basic Auth
