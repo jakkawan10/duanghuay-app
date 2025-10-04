@@ -1,70 +1,43 @@
-import { NextRequest, NextResponse } from "next/server";
-import Omise from "omise";
-import { Timestamp } from "firebase/firestore";
-import { adminDb } from "@/lib/firebaseAdmin"; // <- ไฟล์ admin เดิมของโปรเจ็กต์คุณ
+import { NextResponse } from "next/server";
 
-const omise = Omise({ secretKey: process.env.OMISE_SECRET_KEY! });
-
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { userId, product, amount } = body as {
-      userId: string;
-      product: "tipyalek";
-      amount: number; // 299
-    };
+    console.log("DEBUG: เริ่มต้นสร้าง QR...");
 
-    if (!userId || product !== "tipyalek" || amount !== 299) {
-      return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+    // 👀 ตรวจสอบว่า key มีจริงไหม
+    console.log("DEBUG: typeof OMISE_SECRET_KEY =", typeof process.env.OMISE_SECRET_KEY);
+    console.log("DEBUG: OMISE_SECRET_KEY length =", process.env.OMISE_SECRET_KEY?.length || 0);
+
+    if (!process.env.OMISE_SECRET_KEY) {
+      throw new Error("❌ Missing OMISE_SECRET_KEY in environment variables");
     }
 
-    // 1) สร้าง Source สำหรับ PromptPay
-    const source = await omise.sources.create({
-      type: "promptpay",
-      amount: amount * 100,   // เป็นสตางค์
-      currency: "thb",
+    const body = await req.json();
+    console.log("DEBUG: Request body =", body);
+
+    const res = await fetch("https://api.omise.co/charges", {
+      method: "POST",
+      headers: {
+        Authorization: "Basic " + Buffer.from(process.env.OMISE_SECRET_KEY + ":").toString("base64"),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        amount: body.amount,
+        currency: "thb",
+        source: { type: "promptpay" },
+      }),
     });
 
-    // 2) สร้าง Charge จาก Source (สถานะจะ pending จนกว่าจ่ายจริง)
-    const charge = await omise.charges.create({
-      amount: amount * 100,
-      currency: "thb",
-      source: source.id,
-      description: `Tipyalek 1 hour session for ${userId}`,
-      metadata: { userId, product, minutes: 60 },
-      // ผู้ใช้จ่ายเสร็จเราจะไม่ redirect ก็ได้ (จะแจ้งด้วย webhook)
-      return_uri: `${process.env.APP_URL}/fortune/tipyalek`,
-    });
+    const data = await res.json();
+    console.log("DEBUG: Omise response =", data);
 
-    // 3) เก็บ Payment Request (pending) ไว้ใน Firestore
-    const payRef = adminDb.collection("payments").doc(charge.id);
-    await payRef.set({
-      id: charge.id,
-      userId,
-      product,
-      amount,
-      provider: "omise",
-      sourceId: source.id,
-      status: "pending",
-      createdAt: Timestamp.now(),
-    });
+    if (!res.ok) {
+      throw new Error("Omise API error: " + JSON.stringify(data));
+    }
 
-    // 4) ดึงรูป QR (จาก charge.source.scannable_code.image)
-    // หมายเหตุ: บาง account/เวอร์ชัน โค้ดจะอยู่ที่ charge.source.scannable_code.image.download_uri
-    const qrImage =
-      (charge as any)?.source?.scannable_code?.image?.download_uri ||
-      (charge as any)?.source?.scannable_code?.image?.uri ||
-      null;
-
-    return NextResponse.json({
-      chargeId: charge.id,
-      amount,
-      currency: charge.currency,
-      qrImage,
-      expiresAt: (charge as any)?.source?.expires_at || null,
-    });
-  } catch (e: any) {
-    console.error("create-qr error:", e);
-    return NextResponse.json({ error: e.message || "create-qr failed" }, { status: 500 });
+    return NextResponse.json(data);
+  } catch (err: any) {
+    console.error("ERROR in create-qr:", err.message || err);
+    return NextResponse.json({ error: err.message || "Unknown error" }, { status: 500 });
   }
 }
