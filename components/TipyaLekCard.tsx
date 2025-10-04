@@ -8,10 +8,10 @@ import {
   query,
   where,
   getDocs,
-  serverTimestamp
+  serverTimestamp,
 } from "firebase/firestore";
 
-import { adminDb } from "@/lib/firebaseAdmin";
+import { db } from "@/lib/firebase"; // ✅ ใช้ client db
 import { useAuth } from "@/lib/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
@@ -24,36 +24,49 @@ export default function TipyaLekCard() {
 
   useEffect(() => {
     if (!user) return;
+
     const checkSession = async () => {
-      const q = query(
-        collection(db, "users", user.uid, "ai_sessions"),
-        where("status", "==", "active")
-      );
-      const snap = await getDocs(q);
-      if (!snap.empty) {
-        const session = snap.docs[0].data();
-        setActiveSession({ id: snap.docs[0].id, ...session });
+      try {
+        // ✅ query หา ai_sessions ของ user ที่ active
+        const q = query(
+          collection(doc(db, "users", user.uid), "ai_sessions"),
+          where("status", "==", "active")
+        );
+
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          const session = snap.docs[0].data();
+          setActiveSession({ id: snap.docs[0].id, ...session });
+        }
+      } catch (err) {
+        console.error("Error checking session:", err);
       }
     };
+
     checkSession();
   }, [user]);
 
   const handleBuyClick = async () => {
     if (!user) return;
 
-    // ➕ สร้าง payment_requests
-    const payRef = doc(collection(db, "payment_requests"));
-    await setDoc(payRef, {
-      id: payRef.id,
-      userId: user.uid,
-      method: "qr",
-      status: "pending",
-      createdAt: serverTimestamp(),
-      amount: 299,
-      type: "tipyalek",
-    });
+    try {
+      // ➕ สร้าง payment_requests
+      const payRef = doc(collection(db, "payment_requests"));
+      await setDoc(payRef, {
+        id: payRef.id,
+        userId: user.uid,
+        method: "qr",
+        status: "pending",
+        createdAt: serverTimestamp(),
+        amount: 299,
+        type: "tipyalek",
+      });
 
-    alert("สร้างคำขอชำระเงินแล้ว รอการยืนยันจาก Admin");
+      alert("✅ สร้างคำขอชำระเงินแล้ว รอการยืนยันจาก Admin");
+    } catch (err) {
+      console.error("Error creating payment request:", err);
+      alert("❌ เกิดข้อผิดพลาด ลองใหม่อีกครั้ง");
+    }
   };
 
   const handleEnterClick = () => {
@@ -67,8 +80,7 @@ export default function TipyaLekCard() {
       </CardHeader>
       <CardContent>
         <p className="mb-2">
-          เลขเด็ดที่ผ่านการคำนวณจากสถิติกองสลากย้อนหลังหลายปี และประมวลผลด้วย AI
-          อัจฉริยะ
+          เลขเด็ดที่ผ่านการคำนวณจากสถิติกองสลากย้อนหลังหลายปี และประมวลผลด้วย AI อัจฉริยะ
         </p>
         <p className="text-xs text-gray-500">
           ผลลัพธ์เป็นแนวโน้มเชิงสถิติ โปรดใช้วิจารณญาณในการตัดสินใจ
