@@ -1,40 +1,53 @@
 import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebaseAdmin";
-import { doc, setDoc } from "firebase/firestore";
-
-// ⚠️ ต้องไปตั้งค่า Webhook URL ใน Omise Dashboard
-// เช่น https://duanghuay-app-seven.vercel.app/api/webhook/omise
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    console.log("Webhook Event:", body);
+    const payload = await req.json();
 
-    if (body.object === "event" && body.key === "charge.complete") {
-      const charge = body.data;
+    console.log("📩 Omise Webhook payload:", payload);
+
+    // ✅ สนใจเฉพาะ charge.completed
+    if (payload.object === "event" && payload.key === "charge.complete") {
+      const charge = payload.data;
 
       if (charge.status === "successful") {
-        const userId = charge.metadata?.userId;
-        const session = charge.metadata?.session;
+        const chargeId = charge.id;
 
-        if (userId && session) {
-          // สร้างสิทธิ์ 1 ชั่วโมง
-          const expireAt = new Date(Date.now() + 60 * 60 * 1000);
+        // หา session ที่ chargeId ตรงกัน
+        const snap = await adminDb
+          .collection("sessions")
+          .where("chargeId", "==", chargeId)
+          .get();
 
-          await setDoc(doc(db, "users", userId, "sessions", session), {
-            status: "active",
-            expireAt,
-            updatedAt: new Date(),
-          });
+        if (!snap.empty) {
+          for (const doc of snap.docs) {
+            const ref = adminDb.collection("sessions").doc(doc.id);
 
-          console.log(`✅ อัปเดตสิทธิ์ให้ user=${userId} session=${session}`);
+            const start = new Date();
+            const end = new Date(start.getTime() + 60 * 60 * 1000); // +1 ชั่วโมง
+
+            await ref.update({
+              status: "active",
+              startTime: start,
+              endTime: end,
+              updatedAt: new Date(),
+            });
+
+            console.log("✅ Session updated:", doc.id);
+          }
+        } else {
+          console.warn("⚠️ No session found for chargeId:", chargeId);
         }
       }
     }
 
     return NextResponse.json({ received: true });
-  } catch (error: any) {
-    console.error("Webhook Error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (err: any) {
+    console.error("❌ Webhook error:", err);
+    return NextResponse.json(
+      { error: err.message || "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }
