@@ -15,11 +15,14 @@ export async function POST(req: Request) {
 
     // เรียก Omise Charge
     const charge = await omiseClient.charges.create({
-      amount: 29900, // 299 บาท
+      amount: 29900, // 299 บาท = 29900 สตางค์
       currency: "thb",
       return_uri: "https://duanghuay-app-seven.vercel.app/home",
-      source: { type: "promptpay" },
+      source: {
+        type: "promptpay",
+      } as any, // 👈 บังคับ cast เป็น any
     });
+
 
     // ตรวจโหมด
     const isTestMode = process.env.OMISE_SECRET_KEY?.startsWith("skey_test");
@@ -31,16 +34,17 @@ export async function POST(req: Request) {
 
     if (!qrImage) throw new Error("ไม่พบ QR Image");
 
-    // สร้าง Session ใน Firestore
-    const sessionRef = doc(adminDb, "sessions", charge.id);
-    await setDoc(sessionRef, {
+    // เก็บ session ลง Firestore ด้วย Admin SDK
+    const sessionRef = adminDb.collection("sessions").doc(charge.id);
+    await sessionRef.set({
       userId,
       deity: "tipyalek",
       status: "pending",
       amount: 299,
       chargeId: charge.id,
-      createdAt: serverTimestamp(),
+      createdAt: new Date(),
     });
+
 
     return NextResponse.json({
       sessionId: sessionRef.id,
