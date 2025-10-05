@@ -1,78 +1,59 @@
 "use client";
-
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
-import { useAuth } from "@/lib/hooks/useAuth";
 
-export default function TipyalekPage() {
-  const { user } = useAuth();
+export default function TipyaLekPage() {
   const [loading, setLoading] = useState(false);
   const [qrUrl, setQrUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleCreateQR = async () => {
-    if (!user) {
-      setError("กรุณาเข้าสู่ระบบก่อน");
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    setQrUrl(null);
-
     try {
+      setLoading(true);
+      setError(null);
+
       const res = await fetch("/api/payments/qr-tipyalek", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.uid }),
+        body: JSON.stringify({ userId: "demo_user" }),
       });
 
-      if (!res.ok) {
-        throw new Error("สร้าง QR ไม่สำเร็จ");
-      }
-
       const data = await res.json();
-      setQrUrl(data.qr); // 🟢 ได้ทั้ง QR จริงและ QR ปลอม
+      if (res.ok) {
+        setQrUrl(data.qr); // ✅ เก็บ URL QR จาก backend
+      } else {
+        setError(data.error || "เกิดข้อผิดพลาด");
+      }
     } catch (err: any) {
-      setError(err.message);
+      setError("ไม่สามารถสร้าง QR ได้");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <Card className="w-full max-w-md border-2 border-yellow-500 shadow-lg">
-        <CardHeader>
-          <h2 className="text-xl font-bold text-yellow-700 text-center">
-            ซื้อสิทธิ์องค์ทิพยเลข
-          </h2>
-          <p className="text-center text-sm text-gray-600">
-            299 บาท / 1 ชั่วโมง
-          </p>
-        </CardHeader>
+    <div className="p-4">
+      <h2 className="text-lg font-bold text-center mb-2">
+        ซื้อสิทธิ์คุยกับองค์ทิพยเลข
+      </h2>
+      <p className="text-center mb-4">299 บาท / 1 ชั่วโมง</p>
 
-        <CardContent className="flex flex-col items-center space-y-4">
-          {loading && <p className="text-gray-500">กำลังสร้าง QR...</p>}
-          {error && <p className="text-red-500">❌ {error}</p>}
-          {qrUrl && (
-            <div className="flex flex-col items-center">
-              <p className="mb-2 text-sm text-gray-600">สแกนเพื่อจ่ายเงิน</p>
-              <img src={qrUrl} alt="QR Code" className="w-64 h-64 border rounded-lg" />
-            </div>
-          )}
-        </CardContent>
+      {loading && <p className="text-center">กำลังสร้าง QR...</p>}
 
-        <CardFooter>
-          <Button
-            onClick={handleCreateQR}
-            disabled={loading}
-            className="bg-yellow-600 hover:bg-yellow-700 text-white w-full"
-          >
-            {loading ? "กำลังสร้าง..." : "สร้าง QR สำหรับชำระเงิน"}
-          </Button>
-        </CardFooter>
-      </Card>
+      {error && <p className="text-red-500 text-center">{error}</p>}
+
+      {qrUrl && (
+        <div className="flex justify-center mb-4">
+          <img src={qrUrl} alt="QR Code" className="w-48 h-48 border rounded-lg" />
+        </div>
+      )}
+
+      <div className="flex justify-center gap-2">
+        <button
+          onClick={handleCreateQR}
+          className="bg-green-500 text-white px-4 py-2 rounded"
+        >
+          สร้าง QR สำหรับชำระเงิน
+        </button>
+      </div>
     </div>
   );
 }
