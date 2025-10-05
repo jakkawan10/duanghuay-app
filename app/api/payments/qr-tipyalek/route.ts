@@ -30,16 +30,17 @@ export async function POST(req: Request) {
       chargeId = charge.id;
     }
 
-    // บันทึก Firestore
-    const sessionRef = doc(adminDb, "sessions", chargeId);
-    await setDoc(sessionRef, {
+    // เก็บ session ลง Firestore ด้วย Admin SDK
+    const sessionRef = adminDb.collection("sessions").doc(charge.id);
+    await sessionRef.set({
       userId,
       deity: "tipyalek",
       status: "pending",
       amount: 299,
-      chargeId,
-      createdAt: serverTimestamp(),
+      chargeId: charge.id,
+      createdAt: new Date(),
     });
+
 
     return NextResponse.json({
       sessionId: sessionRef.id,
