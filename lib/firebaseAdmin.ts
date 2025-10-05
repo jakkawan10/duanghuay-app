@@ -1,4 +1,4 @@
-// lib/firebase-admin.ts
+// lib/firebaseAdmin.ts
 import * as admin from "firebase-admin";
 
 if (!admin.apps.length) {

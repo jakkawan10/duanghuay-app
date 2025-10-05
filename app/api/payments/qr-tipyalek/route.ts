@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
-import { adminDb } from "@/lib/firebase-admin";
+import { adminDb } from "@/lib/firebaseAdmin";
 
 export async function POST(req: Request) {
   try {
@@ -30,17 +29,16 @@ export async function POST(req: Request) {
       chargeId = charge.id;
     }
 
-    // เก็บ session ลง Firestore ด้วย Admin SDK
-    const sessionRef = adminDb.collection("sessions").doc(charge.id);
+    // ✅ เก็บ session ลง Firestore ด้วย chargeId ที่ถูกต้อง
+    const sessionRef = adminDb.collection("sessions").doc(chargeId);
     await sessionRef.set({
       userId,
       deity: "tipyalek",
       status: "pending",
       amount: 299,
-      chargeId: charge.id,
+      chargeId,
       createdAt: new Date(),
     });
-
 
     return NextResponse.json({
       sessionId: sessionRef.id,
