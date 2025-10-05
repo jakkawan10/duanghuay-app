@@ -10,50 +10,60 @@ export default function TipyaLekPage() {
     try {
       setLoading(true);
       setError(null);
+      setQrUrl(null);
 
       const res = await fetch("/api/payments/qr-tipyalek", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: "demo_user" }),
       });
 
       const data = await res.json();
-      if (res.ok) {
-        setQrUrl(data.qr); // ✅ เก็บ URL QR จาก backend
-      } else {
+
+      if (!res.ok) {
         setError(data.error || "เกิดข้อผิดพลาด");
+        return;
+      }
+
+      if (data.qr) {
+        setQrUrl(data.qr);
+      } else {
+        setError("ไม่พบ QR code จาก server");
       }
     } catch (err: any) {
-      setError("ไม่สามารถสร้าง QR ได้");
+      setError("เกิดข้อผิดพลาดระหว่างสร้าง QR");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="p-4">
-      <h2 className="text-lg font-bold text-center mb-2">
+    <div className="p-6 text-center">
+      <h2 className="text-xl font-bold mb-2">
         ซื้อสิทธิ์คุยกับองค์ทิพยเลข
       </h2>
-      <p className="text-center mb-4">299 บาท / 1 ชั่วโมง</p>
+      <p className="mb-4">299 บาท / 1 ชั่วโมง</p>
 
-      {loading && <p className="text-center">กำลังสร้าง QR...</p>}
-
-      {error && <p className="text-red-500 text-center">{error}</p>}
+      {loading && <p className="text-gray-500">กำลังสร้าง QR...</p>}
+      {error && <p className="text-red-500">{error}</p>}
 
       {qrUrl && (
         <div className="flex justify-center mb-4">
-          <img src={qrUrl} alt="QR Code" className="w-48 h-48 border rounded-lg" />
+          <img
+            src={qrUrl}
+            alt="QR Code"
+            className="w-56 h-56 border rounded-lg shadow"
+          />
         </div>
       )}
 
-      <div className="flex justify-center gap-2">
-        <button
-          onClick={handleCreateQR}
-          className="bg-green-500 text-white px-4 py-2 rounded"
-        >
-          สร้าง QR สำหรับชำระเงิน
-        </button>
-      </div>
+      <button
+        onClick={handleCreateQR}
+        disabled={loading}
+        className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+      >
+        สร้าง QR สำหรับชำระเงิน
+      </button>
     </div>
   );
 }
