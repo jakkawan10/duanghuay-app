@@ -328,7 +328,7 @@ export default function HomePage() {
             {/* 🔗 เปลี่ยนจาก QR เป็นปุ่มเข้า LINE โดยตรง */}
             <div className="flex flex-col items-center justify-center border p-4 rounded-xl mb-5">
               <img
-                src="/line-qr.png"
+                src="/images/line-qr.png"
                 alt="QR LINE"
                 className="w-56 h-56 mb-3 rounded-lg border"
               />
