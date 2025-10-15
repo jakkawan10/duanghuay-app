@@ -29,11 +29,19 @@ const GODS = [
   { id: "dandok", name: "เจ้าแม่ดานดอกษ์ศ์", color: "from-green-200 to-green-300" },
 ];
 
-const PRICING: Record<1 | 2 | 3, number> = { 1: 159, 2: 259, 3: 299 };
+const PRICING: Record<1 | 2 | 3, number> = { 
+  1: 159, 
+  2: 259, 
+  3: 299 
+};
+
+// เดิมเป็นภาพ QR → เปลี่ยนเป็นลิงก์ LINE
+const LINE_LINK = "https://line.me/ti/p/gKRMcAhruD";
+
 const QR_IMAGES: Record<1 | 2 | 3, string> = {
-  1: "/qr-payment.jpg",
-  2: "/qr-payment.jpg",
-  3: "/qr-payment.jpg",
+  1: LINE_LINK,
+  2: LINE_LINK,
+  3: LINE_LINK,
 };
 
 export default function HomePage() {
