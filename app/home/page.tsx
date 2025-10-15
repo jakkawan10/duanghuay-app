@@ -274,27 +274,40 @@ export default function HomePage() {
             <p className="text-center text-gray-600 mb-6">
               ตอนนี้คุณปลดเพิ่มแล้ว {extraUsed} เทพ • แผนปัจจุบันรองรับ {slots} เทพ
             </p>
+
             <div className="grid md:grid-cols-3 gap-4">
               {([1, 2, 3] as (1 | 2 | 3)[]).map((t) => (
                 <div key={t} className="rounded-xl border p-4 text-center">
                   <div className="text-lg font-semibold mb-1">ปลดล็อกเพิ่ม {t} เทพ</div>
                   <div className="text-2xl font-extrabold mb-2">{PRICING[t]}฿/เดือน</div>
-                  <img
-                    src={QR_IMAGES[t]}
-                    alt={`QR ${PRICING[t]} บาท`}
-                    className="w-full max-w-[220px] mx-auto rounded mb-3 border"
-                  />
-                  <button
-                    onClick={() => requestPayment(t)}
-                    className="px-4 py-2 rounded bg-black text-white hover:opacity-90"
-                  >
-                    ชำระด้วย QR นี้
-                  </button>
+
+                  {/* 🔗 เปลี่ยนจาก QR → เป็นปุ่มติดต่อ LINE */}
+                  <div className="flex flex-col items-center justify-center p-3 mb-3">
+                    <img
+                      src="/line-icon.png"
+                      alt="LINE"
+                      className="w-16 h-16 mb-3"
+                    />
+                    <p className="text-sm text-gray-600 mb-2">
+                      ติดต่อผ่าน LINE เพื่อปลดล็อกแพ็กเกจนี้
+                    </p>
+                    <a
+                      href="https://line.me/ti/p/gKRMcAhruD"
+                      target="_blank"
+                      className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition"
+                    >
+                      ติดต่อผ่าน LINE
+                    </a>
+                  </div>
                 </div>
               ))}
             </div>
+
             <div className="flex justify-center mt-5">
-              <button className="px-4 py-2 rounded border" onClick={() => setShowPay(false)}>
+              <button
+                className="px-4 py-2 rounded border border-gray-400 hover:bg-gray-100"
+                onClick={() => setShowPay(false)}
+              >
                 ปิด
               </button>
             </div>
@@ -302,53 +315,50 @@ export default function HomePage() {
         </div>
       )}
 
+
       {/* Modal Tipyalek */}
       {showTipyaQR && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="bg-white w-full max-w-md rounded-2xl p-6">
-            <h3 className="text-xl font-bold text-center mb-2">ซื้อสิทธิ์คุยกับองค์ทิพยเลข</h3>
+            <h3 className="text-xl font-bold text-center mb-2">
+              ซื้อสิทธิ์คุยกับองค์ทิพยเลข
+            </h3>
             <p className="text-center text-sm mb-4">299 บาท / 1 ชั่วโมง</p>
 
-            <div className="flex flex-col items-center justify-center border p-3 mb-4">
-              {creating && <div>กำลังสร้าง QR...</div>}
-              {!creating && qrImage && <img src={qrImage} alt="QR" className="w-56 h-56" />}
+            {/* 🔗 เปลี่ยนจาก QR เป็นปุ่มเข้า LINE โดยตรง */}
+            <div className="flex flex-col items-center justify-center border p-4 rounded-xl mb-5">
+              <img
+                src="/line-icon.png"
+                alt="LINE"
+                className="w-20 h-20 mb-3"
+              />
+              <p className="text-center text-gray-700 mb-3">
+                ติดต่อผ่าน LINE เพื่อเปิดสิทธิ์เข้าห้ององค์ทิพยเลข
+              </p>
+              <a
+                href="https://line.me/ti/p/gKRMcAhruD"
+                target="_blank"
+                className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition"
+              >
+                ติดต่อผ่าน LINE
+              </a>
             </div>
 
-            {payStatus === "pending" && (
-              <div className="text-center text-yellow-700">รอการชำระเงิน...</div>
-            )}
-            {payStatus === "successful" && (
-              <div className="text-center text-green-700 font-bold">
-                ✅ จ่ายเงินสำเร็จ! เข้าห้องได้แล้ว
-              </div>
-            )}
-            {payStatus === "failed" && (
-              <div className="text-center text-red-600 font-bold">❌ จ่ายไม่สำเร็จ</div>
-            )}
-
-            <div className="flex justify-center gap-2 mt-5">
-              <button className="px-4 py-2 rounded border" onClick={() => setShowTipyaQR(false)}>
+            {/* ปุ่มล่าง */}
+            <div className="flex justify-center gap-3">
+              <button
+                className="px-4 py-2 rounded border border-gray-400 hover:bg-gray-100"
+                onClick={() => setShowTipyaQR(false)}
+              >
                 ปิด
               </button>
               <button
-                className="px-4 py-2 rounded bg-purple-600 text-white"
+                className="px-4 py-2 rounded bg-purple-600 text-white hover:bg-purple-700"
                 onClick={() => router.push("/fortune/tipyalek")}
               >
                 เข้าห้ององค์ทิพยเลข
               </button>
             </div>
-
-            {/* ปุ่มสร้าง QR */}
-            {!qrImage && (
-              <div className="mt-4 text-center">
-                <button
-                  onClick={createQR}
-                  className="px-4 py-2 bg-green-600 text-white rounded"
-                >
-                  สร้าง QR สำหรับจ่ายเงิน
-                </button>
-              </div>
-            )}
           </div>
         </div>
       )}
