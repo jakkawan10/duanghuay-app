@@ -328,10 +328,11 @@ export default function HomePage() {
             {/* 🔗 เปลี่ยนจาก QR เป็นปุ่มเข้า LINE โดยตรง */}
             <div className="flex flex-col items-center justify-center border p-4 rounded-xl mb-5">
               <img
-                src="/line-icon.png"
-                alt="LINE"
-                className="w-20 h-20 mb-3"
+                src="/qr-line.png"
+                alt="QR LINE"
+                className="w-56 h-56 mb-3 rounded-lg border"
               />
+
               <p className="text-center text-gray-700 mb-3">
                 ติดต่อผ่าน LINE เพื่อเปิดสิทธิ์เข้าห้ององค์ทิพยเลข
               </p>
