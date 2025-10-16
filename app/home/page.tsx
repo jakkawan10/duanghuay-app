@@ -263,6 +263,45 @@ export default function HomePage() {
           </div>
         </>
       )}
+      
+      {/* 🔮 เปิดสิทธิ์ TipyaLek 1 ชั่วโมง */}
+      <div className="mt-10 border-t pt-6">
+        <h4 className="text-lg font-bold mb-3 text-center">🕒 เปิดสิทธิ์ห้ององค์ทิพยเลข</h4>
+        <div className="flex flex-col items-center gap-3">
+          <input
+            id="emailInput"
+            type="email"
+            placeholder="กรอกอีเมลผู้ใช้..."
+            className="border rounded px-3 py-2 w-full max-w-md text-center"
+          />
+          <button
+            onClick={async () => {
+              const email = (document.getElementById("emailInput") as HTMLInputElement)?.value.trim();
+              if (!email) return alert("กรุณากรอกอีเมลผู้ใช้ก่อน");
+
+              try {
+                const res = await fetch("/api/admin/grant-tipyalek", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ email }),
+                });
+                const data = await res.json();
+                if (res.ok) {
+                  alert(`✅ เปิดสิทธิ์ให้ ${email} แล้ว (หมดอายุใน 1 ชั่วโมง)`);
+                } else {
+                  alert(`❌ ไม่พบผู้ใช้อีเมลนี้: ${data.error || "Unknown error"}`);
+                }
+              } catch (e) {
+                console.error(e);
+                alert("เกิดข้อผิดพลาด โปรดลองอีกครั้ง");
+              }
+            }}
+            className="px-6 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
+          >
+            เปิดสิทธิ์ 1 ชั่วโมง
+          </button>
+        </div>
+      </div>
 
       {/* Modal 1–3 เทพ */}
       {showPay && (
@@ -284,10 +323,11 @@ export default function HomePage() {
                   {/* 🔗 เปลี่ยนจาก QR → เป็นปุ่มติดต่อ LINE */}
                   <div className="flex flex-col items-center justify-center p-3 mb-3">
                     <img
-                      src="/line-icon.png"
-                      alt="LINE"
-                      className="w-16 h-16 mb-3"
+                      src="/images/line-qr.png"
+                      alt="QR LINE"
+                      className="w-56 h-56 mb-3 rounded-lg border"
                     />
+
                     <p className="text-sm text-gray-600 mb-2">
                       ติดต่อผ่าน LINE เพื่อปลดล็อกแพ็กเกจนี้
                     </p>
